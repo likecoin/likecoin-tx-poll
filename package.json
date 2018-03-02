@@ -1,0 +1,15 @@
+{
+  "name": "likecoin-poll-tx",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "firebase-admin": "^5.9.1",
+    "web3": "^1.0.0-beta.30"
+  }
+}
