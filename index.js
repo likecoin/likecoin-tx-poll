@@ -27,7 +27,7 @@ function sleep(ms) {
 
 const txQueue = [];
 
-const TIME_LIMIT = config.TIME_LIMIT || 60 * 60 * 1000 * 2; // fallback: 2 hours
+const TIME_LIMIT = config.TIME_LIMIT || 60 * 60 * 1000 * 24; // fallback: 1 day
 const TX_LOOP_INTERVAL = config.TX_LOOP_INTERVAL || 30 * 1000; // fallback: 30s
 const FETCH_INTERVAL = config.FETCH_INTERVAL || 1000; // fallback: 1s
 const MAX_TX_IN_QUEUE = config.MAX_TX_IN_QUEUE || 1000;
@@ -37,10 +37,24 @@ async function startWatcher() {
     const loopTime = Date.now();
     const tx = txQueue.shift();
     if (tx) {
-      const { txHash, timestamp, cb } = tx;
+      const {
+        txHash,
+        data,
+        timestamp,
+        cb,
+      } = tx;
       try {
         const receipt = await web3.eth.getTransactionReceipt(txHash);
         if (!receipt) {
+          const pendingTx = await web3.eth.getTransaction(txHash);
+          if (pendingTx) {
+            // The transaction is pending on Ethereum network but not mined yet, so should not
+            // be considered timeout too early
+            const payload = { txHash, nonce: data.nonce };
+            // eslint-disable-next-line no-console
+            console.log(`${new Date().toISOString()} got transaction but no receipt, payload: ${JSON.stringify(payload)}`);
+            tx.timestamp = Date.now();
+          }
           if (Date.now() - timestamp > TIME_LIMIT) {
             cb(STATUS_TIMEOUT, tx);
           } else {
@@ -63,8 +77,15 @@ async function startWatcher() {
   }
 }
 
-function watchTx(txHash, cb) {
-  txQueue.push({ txHash, timestamp: Date.now(), cb });
+function watchTx(doc, cb) {
+  const txHash = doc.id;
+  const data = doc.data();
+  txQueue.push({
+    timestamp: Date.now(),
+    txHash,
+    data,
+    cb,
+  });
 }
 
 function statusCallback(status, tx) {
@@ -79,12 +100,11 @@ function statusCallback(status, tx) {
 function main() {
   const txRef = db.collection(config.FIRESTORE_TX_ROOT);
   txRef.where('status', '==', 'pending')
+    .orderBy('ts')
     .limit(MAX_TX_IN_QUEUE)
     .onSnapshot((snapshot) => {
-      snapshot.docChanges.filter(change => change.type === 'added').forEach((change) => {
-        const txHash = change.doc.id;
-        watchTx(txHash, statusCallback);
-      });
+      snapshot.docChanges.filter(change => change.type === 'added')
+        .forEach(change => watchTx(change.doc, statusCallback));
     });
   startWatcher();
 }
