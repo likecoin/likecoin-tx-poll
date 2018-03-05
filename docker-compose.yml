@@ -1,0 +1,6 @@
+version: '3'
+services:
+  like-tx-poll:
+    build: .
+    volumes:
+     - ./config:/app/config
