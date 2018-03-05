@@ -2,15 +2,15 @@
 
 const Web3 = require('web3');
 const admin = require('firebase-admin');
-const serviceAccount = require('./serviceAccountKey.json');
-const config = require('./config.js');
+const serviceAccount = require('./config/serviceAccountKey.json');
+const config = require('./config/config.js');
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 const db = admin.firestore();
 
-const web3 = new Web3(new Web3.providers.HttpProvider(`https://${config.NETWORK}.infura.io/ywCD9mvUruQeYcZcyghk`));
+const web3 = new Web3(new Web3.providers.HttpProvider(config.WEB3_PROVIDER));
 
 const STATUS_FAIL = 'fail';
 const STATUS_SUCCESS = 'success';
