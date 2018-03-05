@@ -10,7 +10,9 @@ admin.initializeApp({
 });
 const db = admin.firestore();
 
-const web3 = new Web3(new Web3.providers.HttpProvider(config.WEB3_PROVIDER));
+
+const web3Provider = process.env.IS_TESTNET ? 'https://rinkeby.infura.io/ywCD9mvUruQeYcZcyghk' : 'https://mainnet.infura.io/ywCD9mvUruQeYcZcyghk';
+const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider));
 
 const STATUS_FAIL = 'fail';
 const STATUS_SUCCESS = 'success';
@@ -22,6 +24,11 @@ function sleep(ms) {
 
 const txQueue = [];
 
+const TIME_LIMIT = config.TIME_LIMIT || 60 * 60 * 1000 * 2; // fallback: 2 hours
+const TX_LOOP_INTERVAL = config.TX_LOOP_INTERVAL || 30 * 1000; // fallback: 30s
+const FETCH_INTERVAL = config.FETCH_INTERVAL || 1000; // fallback: 1s
+const MAX_TX_IN_QUEUE = config.MAX_TX_IN_QUEUE || 1000;
+
 async function startWatcher() {
   for (;;) {
     const loopTime = Date.now();
@@ -31,11 +38,11 @@ async function startWatcher() {
       try {
         const receipt = await web3.eth.getTransactionReceipt(txHash);
         if (!receipt) {
-          if (Date.now() - timestamp > config.TIME_LIMIT) {
+          if (Date.now() - timestamp > TIME_LIMIT) {
             cb(STATUS_TIMEOUT, tx);
           } else {
             // wait for retry
-            setTimeout(() => txQueue.push(tx), config.TX_LOOP_INTERVAL);
+            setTimeout(() => txQueue.push(tx), TX_LOOP_INTERVAL);
           }
         } else if (Number.parseInt(receipt.status, 16) === 1) {
           cb(STATUS_SUCCESS, tx, receipt);
@@ -47,8 +54,8 @@ async function startWatcher() {
       }
     }
     const timeUsed = Date.now() - loopTime;
-    if (timeUsed < config.FETCH_INTERVAL) {
-      await sleep(config.FETCH_INTERVAL - timeUsed);
+    if (timeUsed < FETCH_INTERVAL) {
+      await sleep(FETCH_INTERVAL - timeUsed);
     }
   }
 }
@@ -65,7 +72,7 @@ function statusCallback(status, tx) {
 function main() {
   const txRef = db.collection(config.FIRESTORE_TX_ROOT);
   txRef.where('status', '==', 'pending')
-    .limit(config.MAX_TX_IN_QUEUE)
+    .limit(MAX_TX_IN_QUEUE)
     .onSnapshot((snapshot) => {
       snapshot.docChanges.filter(change => change.type === 'added').forEach((change) => {
         const txHash = change.doc.id;
