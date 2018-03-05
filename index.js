@@ -100,6 +100,7 @@ function statusCallback(status, tx, receipt) {
     to,
     value,
     nonce,
+    type,
   } = tx.data;
   publisher.publish(PUBSUB_TOPIC_MISC, {
     logType: 'eventStatus',
@@ -108,6 +109,7 @@ function statusCallback(status, tx, receipt) {
     txBlock: receipt.blockHash,
     txGasUsed: receipt.gasUsed,
     txNonce: nonce,
+    txType: type,
     fromUser: fromId,
     fromWallet: from,
     toUser: toId,
