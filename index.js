@@ -2,8 +2,11 @@
 
 const Web3 = require('web3');
 const admin = require('firebase-admin');
+const publisher = require('./util/gcloudPub');
 const serviceAccount = require('./config/serviceAccountKey.json');
 const config = require('./config/config.js');
+
+const PUBSUB_TOPIC_MISC = 'misc';
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -66,7 +69,11 @@ function watchTx(txHash, cb) {
 
 function statusCallback(status, tx) {
   db.collection(config.FIRESTORE_TX_ROOT).doc(tx.txHash).update({ status });
-  // TODO: log through pubsub
+  publisher.publish(PUBSUB_TOPIC_MISC, {
+    logType: 'eventStatus',
+    txHash: tx.txHash,
+    txStatus: status,
+  });
 }
 
 function main() {

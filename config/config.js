@@ -4,7 +4,7 @@ config.FIRESTORE_TX_ROOT = '';
 
 config.GCLOUD_PUBSUB_MAX_MESSAGES = 10;
 config.GCLOUD_PUBSUB_MAX_WAIT = 1000;
-config.GCLOUD_PUBSUB_ENABLE = true;
+config.GCLOUD_PUBSUB_ENABLE = false;
 
 // Number of milliseconds before a transaction can enter the queue again
 config.TX_LOOP_INTERVAL = 30 * 1000;
