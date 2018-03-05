@@ -15,6 +15,9 @@ config.FETCH_INTERVAL = 1000;
 // Number of milliseconds before a transaction is set to timeout state
 config.TIME_LIMIT = 60 * 60 * 1000 * 2;
 
+// Maximum number of transactions to watch
+config.MAX_TX_IN_QUEUE = 1000;
+
 module.exports = config;
 
 // vim: set ts=2 sw=2:

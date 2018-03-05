@@ -64,12 +64,14 @@ function statusCallback(status, tx) {
 
 function main() {
   const txRef = db.collection(config.FIRESTORE_TX_ROOT);
-  txRef.where('status', '==', 'pending').onSnapshot((snapshot) => {
-    snapshot.docChanges.filter(change => change.type === 'added').forEach((change) => {
-      const txHash = change.doc.id;
-      watchTx(txHash, statusCallback);
+  txRef.where('status', '==', 'pending')
+    .limit(config.MAX_TX_IN_QUEUE)
+    .onSnapshot((snapshot) => {
+      snapshot.docChanges.filter(change => change.type === 'added').forEach((change) => {
+        const txHash = change.doc.id;
+        watchTx(txHash, statusCallback);
+      });
     });
-  });
   startWatcher();
 }
 
