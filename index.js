@@ -2,6 +2,7 @@
 
 const Web3 = require('web3');
 const admin = require('firebase-admin');
+const BigNumber = require('bignumber.js');
 const publisher = require('./util/gcloudPub');
 const serviceAccount = require('./config/serviceAccountKey.json');
 const config = require('./config/config.js');
@@ -20,6 +21,8 @@ const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider));
 const STATUS_FAIL = 'fail';
 const STATUS_SUCCESS = 'success';
 const STATUS_TIMEOUT = 'timeout';
+
+const ONE_LIKE = new BigNumber(10).pow(18);
 
 function sleep(ms) {
   return new global.Promise(resolve => setTimeout(resolve, ms));
@@ -88,12 +91,29 @@ function watchTx(doc, cb) {
   });
 }
 
-function statusCallback(status, tx) {
+function statusCallback(status, tx, receipt) {
   db.collection(config.FIRESTORE_TX_ROOT).doc(tx.txHash).update({ status });
+  const {
+    fromId,
+    from,
+    toId,
+    to,
+    value,
+    nonce,
+  } = tx.data;
   publisher.publish(PUBSUB_TOPIC_MISC, {
     logType: 'eventStatus',
     txHash: tx.txHash,
     txStatus: status,
+    txBlock: receipt.blockHash,
+    txGasUsed: receipt.gasUsed,
+    txNonce: nonce,
+    fromUser: fromId,
+    fromWallet: from,
+    toUser: toId,
+    toWallet: to,
+    likeAmount: new BigNumber(value).dividedBy(ONE_LIKE).toNumber(),
+    likeAmountUnitStr: new BigNumber(value).toFixed(),
   });
 }
 
