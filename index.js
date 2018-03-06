@@ -84,7 +84,7 @@ function watchTx(doc, cb) {
   const txHash = doc.id;
   const data = doc.data();
   txQueue.push({
-    timestamp: Date.now(),
+    timestamp: data.ts || Date.now(),
     txHash,
     data,
     cb,
