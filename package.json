@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "lint": "eslint index.js"
+    "lint": "eslint ."
   },
   "author": "",
   "license": "ISC",
@@ -13,6 +13,7 @@
     "@google-cloud/pubsub": "^0.16.4",
     "bignumber.js": "^6.0.0",
     "firebase-admin": "^5.9.1",
+    "uuid": "^3.2.1",
     "web3": "^1.0.0-beta.30"
   },
   "devDependencies": {
