@@ -24,7 +24,7 @@ config.RETRY_NOT_FOUND_INTERVAL = 30 * 1000;
 // Number of consecutive STATUS.NOT_FOUND before retry
 config.NOT_FOUND_COUNT_BEFORE_RETRY = 3;
 
-// Maximum number of transactions to watch
+// Maximum number of transactions to watch per query
 config.MAX_TX_IN_QUEUE = 1000;
 
 // Number of milliseconds before a transaction is put into queue
@@ -59,5 +59,3 @@ config.WATCH_QUERIES = [
 ];
 
 module.exports = config;
-
-// vim: set ts=2 sw=2:

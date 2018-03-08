@@ -2,6 +2,7 @@ const Web3 = require('web3');
 const config = require('../config/config.js');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
+const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
 const web3Provider = process.env.IS_TESTNET ? 'https://rinkeby.infura.io/ywCD9mvUruQeYcZcyghk' : 'https://mainnet.infura.io/ywCD9mvUruQeYcZcyghk';
 const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider));
@@ -10,7 +11,7 @@ let currentBlockNumber;
 
 setInterval(async () => {
   currentBlockNumber = await web3.eth.getBlockNumber();
-}, 14400);
+}, BLOCK_TIME);
 
 const STATUS = {
   // PENDING is the initial status of the transaction in database
@@ -27,7 +28,8 @@ const STATUS = {
   CONFIRMED: 'confirmed',
 };
 
-async function getTransactionStatus(txHash, requireReceipt) {
+async function getTransactionStatus(txHash, opt) {
+  const requireReceipt = opt && opt.requireReceipt;
   const networkTx = await web3.eth.getTransaction(txHash);
   if (!networkTx) {
     return { status: STATUS.NOT_FOUND };
@@ -50,7 +52,7 @@ async function getTransactionStatus(txHash, requireReceipt) {
 }
 
 function sendSignedTransaction(rawSignedTx) {
-  return new global.Promise((resolve, reject) => {
+  return new Promise((resolve, reject) => {
     web3.eth.sendSignedTransaction(rawSignedTx)
       .once('transactionHash', resolve)
       .once('error', reject);
