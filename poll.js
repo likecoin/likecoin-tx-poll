@@ -3,7 +3,7 @@
 const BigNumber = require('bignumber.js');
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config.js');
-const { STATUS, getTransactionStatus } = require('./util/web3.js');
+const { web3, STATUS, getTransactionStatus } = require('./util/web3.js');
 const { db } = require('./util/db.js');
 
 const PUBSUB_TOPIC_MISC = 'misc';
@@ -27,8 +27,17 @@ class PollTxMonitor {
     this.shouldStop = false;
   }
 
-  writeTxStatus(receipt) {
-    db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update({ status: this.status });
+  async writeTxStatus(receipt) {
+    const statusUpdate = { status: this.status };
+    let blockNumber = 0;
+    let blockTime = 0;
+    if (receipt) {
+      ({ blockNumber } = receipt);
+      statusUpdate.completeBlockNumber = blockNumber;
+      blockTime = (await web3.eth.getBlock(blockNumber)).timestamp * 1000; // convert seconds to ms
+      statusUpdate.completeTs = blockTime;
+    }
+    db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     const {
       fromId,
       from,
@@ -43,6 +52,8 @@ class PollTxMonitor {
       txHash: this.txHash,
       txStatus: this.status,
       txBlock: receipt ? receipt.blockHash : '',
+      txBlockNumber: blockNumber,
+      txBlockTime: blockTime,
       txGasUsed: receipt ? receipt.gasUsed : 0,
       txNonce: nonce,
       txType: type,
@@ -72,8 +83,12 @@ class PollTxMonitor {
         switch (status) {
           case STATUS.SUCCESS:
           case STATUS.FAIL:
-            this.writeTxStatus(receipt);
-            finished = true;
+            try {
+              await this.writeTxStatus(status, receipt);
+              finished = true;
+            } catch (err) {
+              console.error(err); // eslint-disable-line no-console
+            }
             break;
           case STATUS.MINED:
             this.ts = Date.now();
@@ -84,8 +99,12 @@ class PollTxMonitor {
             if (Date.now() - this.ts > TIME_LIMIT) {
               // timeout
               this.status = STATUS.TIMEOUT;
-              this.writeTxStatus(status);
-              finished = true;
+              try {
+                await this.writeTxStatus(status);
+                finished = true;
+              } catch (err) {
+                console.error(err); // eslint-disable-line no-console
+              }
             }
             break;
           default:
