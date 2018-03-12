@@ -84,7 +84,7 @@ class PollTxMonitor {
           case STATUS.SUCCESS:
           case STATUS.FAIL:
             try {
-              await this.writeTxStatus(status, receipt);
+              await this.writeTxStatus(receipt);
               finished = true;
             } catch (err) {
               console.error(err); // eslint-disable-line no-console
@@ -100,7 +100,7 @@ class PollTxMonitor {
               // timeout
               this.status = STATUS.TIMEOUT;
               try {
-                await this.writeTxStatus(status);
+                await this.writeTxStatus();
                 finished = true;
               } catch (err) {
                 console.error(err); // eslint-disable-line no-console
