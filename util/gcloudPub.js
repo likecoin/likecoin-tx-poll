@@ -34,8 +34,8 @@ publisher.publish = async (publishTopic, obj) => {
   const dataBuffer = Buffer.from(data);
   try {
     await publisherWrapper[publishTopic].publish(dataBuffer);
-  } catch(err) {
-      console.error('ERROR:', err);
+  } catch (err) {
+    console.error('ERROR:', err); // eslint-disable-line no-console
   }
 };
 
