@@ -49,9 +49,19 @@ class PollTxMonitor {
     } = this.data;
     let likeAmount;
     let likeAmountUnitStr;
+    let ETHAmount;
+    let ETHAmountUnitStr;
     if (value !== undefined) {
-      likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-      likeAmountUnitStr = new BigNumber(value).toFixed();
+      switch (type) {
+        case 'transferETH':
+          ETHAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
+          ETHAmountUnitStr = new BigNumber(value).toFixed();
+          break;
+        default:
+          likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
+          likeAmountUnitStr = new BigNumber(value).toFixed();
+          break;
+      }
     }
     publisher.publish(PUBSUB_TOPIC_MISC, {
       logType: 'eventStatus',
@@ -69,6 +79,8 @@ class PollTxMonitor {
       toWallet: to,
       likeAmount,
       likeAmountUnitStr,
+      ETHAmount,
+      ETHAmountUnitStr,
     });
   }
 
