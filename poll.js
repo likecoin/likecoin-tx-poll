@@ -105,7 +105,7 @@ class PollTxMonitor {
               await this.writeTxStatus(receipt);
               finished = true;
             } catch (err) {
-              console.error(err); // eslint-disable-line no-console
+              console.error(this.txHash, `Error when writing tx status (${this.status}):`, err); // eslint-disable-line no-console
             }
             break;
           case STATUS.MINED:
@@ -121,7 +121,7 @@ class PollTxMonitor {
                 await this.writeTxStatus();
                 finished = true;
               } catch (err) {
-                console.error(err); // eslint-disable-line no-console
+                console.error(this.txHash, `Error when writing tx status (${this.status}):`, err); // eslint-disable-line no-console
               }
             }
             break;
@@ -133,7 +133,7 @@ class PollTxMonitor {
         await sleep(TX_LOOP_INTERVAL);
       }
     } catch (err) {
-      console.error(err); // eslint-disable-line no-console
+      console.error(this.txHash, 'Error in PollTxMonitor loop:', err); // eslint-disable-line no-console
     }
     if (this.onFinish) {
       this.onFinish(this);

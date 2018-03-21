@@ -24,7 +24,7 @@ async function main() {
     minTime: FETCH_INTERVAL,
   });
   // eslint-disable-next-line no-console
-  rateLimiter.on('error', console.error);
+  rateLimiter.on('error', err => console.error('Error in rateLimiter:', err));
 
   const existingTx = {};
 

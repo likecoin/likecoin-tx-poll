@@ -102,7 +102,7 @@ class RetryTxMonitor {
                 }
                 this.logRetry(known);
               } catch (err) {
-                console.error(err); // eslint-disable-line no-console
+                console.error(this.txHash, 'Error when resending tx:', err); // eslint-disable-line no-console
               }
             }
             break;
@@ -114,7 +114,7 @@ class RetryTxMonitor {
         await sleep(nextLoopDelay);
       }
     } catch (err) {
-      console.error(err); // eslint-disable-line no-console
+      console.error(this.txHash, 'Error in RetryTxMonitor loop:', err); // eslint-disable-line no-console
     }
     if (this.onFinish) {
       this.onFinish(this);
