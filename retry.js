@@ -38,6 +38,12 @@ class RetryTxMonitor {
       nonce,
       type,
     } = this.data;
+    let likeAmount;
+    let likeAmountUnitStr;
+    if (value !== undefined) {
+      likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
+      likeAmountUnitStr = new BigNumber(value).toFixed();
+    }
     publisher.publish(PUBSUB_TOPIC_MISC, {
       logType,
       txHash: this.txHash,
@@ -47,8 +53,8 @@ class RetryTxMonitor {
       fromWallet: from,
       toUser: toId,
       toWallet: to,
-      likeAmount: new BigNumber(value).dividedBy(ONE_LIKE).toNumber(),
-      likeAmountUnitStr: new BigNumber(value).toFixed(),
+      likeAmount,
+      likeAmountUnitStr,
     });
   }
 
