@@ -9,6 +9,10 @@ config.GCLOUD_PUBSUB_ENABLE = false;
 // Queue mode, either 'RETRY' or 'POLL'
 config.QUEUE_MODE = 'POLL';
 
+// -----------------------------------
+// Common configs
+// -----------------------------------
+
 // Number of milliseconds before re-enqueuing a transaction
 config.TX_LOOP_INTERVAL = 30 * 1000;
 
@@ -16,13 +20,7 @@ config.TX_LOOP_INTERVAL = 30 * 1000;
 config.FETCH_INTERVAL = 1000;
 
 // Number of milliseconds before a transaction is set to timeout state
-config.TIME_LIMIT = 60 * 60 * 1000 * 24;
-
-// Number of milliseconds before re-enqueuing a transaction if not found
-config.RETRY_NOT_FOUND_INTERVAL = 30 * 1000;
-
-// Number of consecutive STATUS.NOT_FOUND before retry
-config.NOT_FOUND_COUNT_BEFORE_RETRY = 3;
+config.TIME_LIMIT = 24 * 60 * 60 * 1000;
 
 // Maximum number of transactions to watch per query
 config.MAX_TX_IN_QUEUE = 1000;
@@ -57,5 +55,23 @@ config.CONFIRMATION_NEEDED = 5;
 config.WATCH_QUERIES = [
   [['status', '==', 'pending']],
 ];
+
+// -----------------------------------
+// Retry-specific configs
+// -----------------------------------
+
+// Number of milliseconds before re-enqueuing a transaction if not found
+config.RETRY_NOT_FOUND_INTERVAL = 10 * 1000;
+
+// Number of consecutive STATUS.NOT_FOUND before retry
+config.NOT_FOUND_COUNT_BEFORE_RETRY = 3;
+
+// Gas price for replacement transactions in wei
+config.REPLACEMENT_GAS_PRICE = '40000000000';
+
+// Private keys to use when replacing timeout transactions
+config.PRIVATE_KEYS = {
+  '0xC0Dec0dec0DeC0Dec0dEc0DEC0DEC0DEC0DEC0dE': '0xC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DE',
+};
 
 module.exports = config;

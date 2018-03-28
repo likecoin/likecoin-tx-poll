@@ -1,7 +1,9 @@
 const Web3 = require('web3');
 const config = require('../config/config.js');
+const BigNumber = require('bignumber.js');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
+const REPLACEMENT_GAS_PRICE = config.REPLACEMENT_GAS_PRICE || '40000000000';
 const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
 const web3Provider = process.env.IS_TESTNET ? 'https://rinkeby.infura.io/ywCD9mvUruQeYcZcyghk' : 'https://mainnet.infura.io/ywCD9mvUruQeYcZcyghk';
@@ -28,8 +30,7 @@ const STATUS = {
   CONFIRMED: 'confirmed',
 };
 
-async function getTransactionStatus(txHash, opt) {
-  const requireReceipt = opt && opt.requireReceipt;
+async function getTransactionStatus(txHash) {
   const networkTx = await web3.eth.getTransaction(txHash);
   if (!networkTx) {
     return { status: STATUS.NOT_FOUND };
@@ -43,9 +44,6 @@ async function getTransactionStatus(txHash, opt) {
   if (currentBlockNumber - networkTx.blockNumber < CONFIRMATION_NEEDED) {
     return { status: STATUS.MINED };
   }
-  if (!requireReceipt) {
-    return { status: STATUS.CONFIRMED };
-  }
   const receipt = await web3.eth.getTransactionReceipt(txHash);
   const status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
   return { status, receipt };
@@ -55,30 +53,120 @@ function sendSignedTransaction(rawSignedTx) {
   return new Promise((resolve, reject) => {
     web3.eth.sendSignedTransaction(rawSignedTx)
       .once('transactionHash', resolve)
-      .once('error', reject);
+      .once('error', (err) => {
+        reject(err);
+      });
   });
 }
 
-async function resendTransaction(rawSignedTx, txHash) {
-  let known = false;
+async function sendTransaction(rawSignedTx) {
   try {
-    await sendSignedTransaction(rawSignedTx);
+    const txHash = await sendSignedTransaction(rawSignedTx);
+    return { known: false, txHash };
   } catch (err) {
     // Maybe now already on network?
-    if (/known transaction/.test(err)) {
+    const match = /known transaction:\s*([0-9a-f]+)/.exec(err);
+    if (match) {
+      const txHash = `0x${match[1]}`;
       console.log(`Retry but known transaction ${txHash}`); // eslint-disable-line no-console
-      known = true;
-    } else {
-      throw err;
+      return { known: true, txHash };
     }
+    throw err;
   }
-  return known;
 }
 
-module.exports = {
-  web3,
-  STATUS,
-  getTransactionStatus,
-  resendTransaction,
-};
+const ONE_LIKE = new BigNumber(10).pow(18);
 
+class Transaction {
+  constructor(txHash, data) {
+    this.txHash = txHash;
+    this.data = data || {};
+    this.ts = Number.parseInt(this.data.ts, 10) || Date.now();
+  }
+
+  getPrivKey() {
+    const addr = this.data.delegatorAddress;
+    const privKey = config.PRIVATE_KEYS[addr];
+    const privKeyAddr = web3.eth.accounts.privateKeyToAccount(privKey).address;
+    if (addr !== privKeyAddr) {
+      throw new Error(`Unmatching private key: ${addr}. Make sure you are using checksum address format.`);
+    }
+    return privKey;
+  }
+
+  async getStatus() {
+    return getTransactionStatus(this.txHash);
+  }
+
+  getLikeAmount() {
+    const { value, type } = this.data;
+    if (value === undefined || type === 'transferETH') {
+      return {};
+    }
+    return {
+      likeAmount: new BigNumber(value).dividedBy(ONE_LIKE).toNumber(),
+      likeAmountUnitStr: new BigNumber(value).toFixed(),
+    };
+  }
+
+  getETHAmount() {
+    const { value, type } = this.data;
+    if (value === undefined || type !== 'transferETH') {
+      return {};
+    }
+    return {
+      ETHAmount: new BigNumber(value).dividedBy(ONE_LIKE).toNumber(),
+      ETHAmountUnitStr: new BigNumber(value).toFixed(),
+    };
+  }
+
+  generateLogData() {
+    const {
+      fromId,
+      from,
+      toId,
+      to,
+      nonce,
+      type,
+    } = this.data;
+    const { likeAmount, likeAmountUnitStr } = this.getLikeAmount();
+    const { ETHAmount, ETHAmountUnitStr } = this.getETHAmount();
+    return {
+      txHash: this.txHash,
+      txNonce: nonce,
+      txType: type,
+      fromUser: fromId,
+      fromWallet: from,
+      toUser: toId,
+      toWallet: to,
+      likeAmount,
+      likeAmountUnitStr,
+      ETHAmount,
+      ETHAmountUnitStr,
+    };
+  }
+
+  resend() {
+    return sendTransaction(this.data.rawSignedTx);
+  }
+
+  async replace() {
+    const privKey = this.getPrivKey();
+    const { delegatorAddress, nonce } = this.data;
+    const replacementTx = await web3.eth.accounts.signTransaction({
+      nonce,
+      to: delegatorAddress,
+      gasPrice: REPLACEMENT_GAS_PRICE,
+      gas: 21000,
+    }, privKey);
+    const { known, txHash } = await sendTransaction(replacementTx.rawTransaction);
+    return {
+      known,
+      tx: new Transaction(txHash, {
+        rawSignedTx: replacementTx.rawTransaction,
+      }),
+    };
+  }
+}
+
+module.exports = { web3, STATUS, Transaction };

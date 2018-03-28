@@ -23,24 +23,36 @@ async function main() {
     maxConcurrent: 1,
     minTime: FETCH_INTERVAL,
   });
-  // eslint-disable-next-line no-console
-  rateLimiter.on('error', console.error);
+  rateLimiter.on('error', console.error); // eslint-disable-line no-console
 
-  const existingTx = {};
+  const txMonitors = {};
 
-  watchTx((doc) => {
+  watchTx((doc, type) => {
     const txHash = doc.id;
-    if (existingTx[txHash]) {
-      // eslint-disable-next-line no-console
-      console.log(`Receiving transaction ${txHash}, which already exists`);
-      return;
+    const existingTxMonitor = txMonitors[txHash];
+    if (type === 'added') {
+      if (existingTxMonitor) {
+        // eslint-disable-next-line no-console
+        console.log(`Received transaction ${txHash}, which already exists`);
+        return;
+      }
+      try {
+        const txMonitor = new TxMonitor(doc, rateLimiter);
+        txMonitors[txHash] = txMonitor;
+        txMonitor.onFinish = (handler) => {
+          delete txMonitors[handler.tx.txHash];
+        };
+        txMonitor.startLoop();
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.log(`${txHash}: error when initializing txMonitor`, err);
+      }
+    } else if (type === 'removed') {
+      if (!existingTxMonitor) {
+        return;
+      }
+      existingTxMonitor.stop();
     }
-    const txMonitor = new TxMonitor(doc, rateLimiter);
-    existingTx[txHash] = txMonitor;
-    txMonitor.onFinish = (handler) => {
-      delete existingTx[handler.txHash];
-    };
-    txMonitor.startLoop();
   });
 }
 
