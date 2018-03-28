@@ -27,6 +27,10 @@ function watchTx(callback) {
             const { doc, type } = change;
             callback(doc, type);
           });
+      }, (err) => {
+        console.error('Firestore error', err); // eslint-disable-line no-console
+        console.error('Terminating...'); // eslint-disable-line no-console
+        process.exit(1);
       });
   });
 }
