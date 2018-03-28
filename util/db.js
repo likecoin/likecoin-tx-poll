@@ -19,16 +19,32 @@ function watchTx(callback) {
     ANDedQueries.forEach((query) => {
       ref = ref.where(...query);
     });
-    ref.orderBy('ts')
-      .limit(MAX_TX_IN_QUEUE)
-      .onSnapshot((snapshot) => {
+    const queryStr = JSON.stringify(ANDedQueries);
+    const watchRef = ref.orderBy('ts').limit(MAX_TX_IN_QUEUE);
+    let unsubscribe;
+    const watch = () => {
+      unsubscribe = watchRef.onSnapshot((snapshot) => {
         snapshot.docChanges
-          .filter(change => change.type === 'added')
           .forEach((change) => {
-            const { doc } = change;
-            callback(doc);
+            const { doc, type } = change;
+            callback(doc, type);
           });
+      }, (err) => {
+        console.error(`Firestore error (query: ${queryStr}):`, err); // eslint-disable-line no-console
+        unsubscribe();
+        const timer = setInterval(() => {
+          console.log(`Trying to restart watcher (query: ${queryStr})...`); // eslint-disable-line no-console
+          try {
+            watch();
+            clearInterval(timer);
+          } catch (innerErr) {
+            console.log(`Watcher restart failed (query: ${queryStr}):`, innerErr); // eslint-disable-line no-console
+          }
+        }, 10000);
       });
+      console.log(`Watcher for query ${queryStr} started.`); // eslint-disable-line no-console
+    };
+    watch();
   });
 }
 

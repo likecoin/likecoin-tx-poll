@@ -26,21 +26,35 @@ async function main() {
   // eslint-disable-next-line no-console
   rateLimiter.on('error', err => console.error('Error in rateLimiter:', err));
 
-  const existingTx = {};
+  const existingMonitors = {};
 
-  watchTx((doc) => {
+  watchTx((doc, type) => {
     const txHash = doc.id;
-    if (existingTx[txHash]) {
-      // eslint-disable-next-line no-console
-      console.log(`Receiving transaction ${txHash}, which already exists`);
-      return;
+    const currentMonitor = existingMonitors[txHash];
+    switch (type) {
+      case 'added': {
+        if (currentMonitor) {
+          // eslint-disable-next-line no-console
+          console.log(`Receiving transaction ${txHash}, which already exists`);
+          return;
+        }
+        const txMonitor = new TxMonitor(doc, rateLimiter);
+        existingMonitors[txHash] = txMonitor;
+        txMonitor.onFinish = (monitor) => {
+          delete existingMonitors[monitor.txHash];
+        };
+        txMonitor.startLoop();
+        break;
+      }
+      case 'removed':
+        if (currentMonitor) {
+          currentMonitor.stop();
+          delete existingMonitors[currentMonitor.txHash];
+        }
+        break;
+      case 'modified':
+      default:
     }
-    const txMonitor = new TxMonitor(doc, rateLimiter);
-    existingTx[txHash] = txMonitor;
-    txMonitor.onFinish = (handler) => {
-      delete existingTx[handler.txHash];
-    };
-    txMonitor.startLoop();
   });
 }
 
