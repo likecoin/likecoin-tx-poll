@@ -1,6 +1,7 @@
 const Web3 = require('web3');
 const config = require('../config/config.js');
 const BigNumber = require('bignumber.js');
+const accounts = require('../config/accounts.js');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
 const REPLACEMENT_GAS_PRICE = config.REPLACEMENT_GAS_PRICE || '40000000000';
@@ -85,13 +86,17 @@ class Transaction {
   }
 
   getPrivKey() {
-    const addr = this.data.delegatorAddress;
-    const privKey = config.PRIVATE_KEYS[addr];
-    const privKeyAddr = web3.eth.accounts.privateKeyToAccount(privKey).address;
-    if (addr !== privKeyAddr) {
-      throw new Error(`Unmatching private key: ${addr}. Make sure you are using checksum address format.`);
+    const addr = this.data.delegatorAddress.toLowerCase();
+    const account = accounts.filter(acc => acc.address.toLowerCase() === addr)[0];
+    if (account === undefined) {
+      throw new Error(`Cannot find private key for ${addr}.`);
     }
-    return privKey;
+    const { privateKey } = account;
+    const privKeyAddr = web3.eth.accounts.privateKeyToAccount(privateKey).address.toLowerCase();
+    if (addr !== privKeyAddr) {
+      throw new Error(`Unmatching private key for ${addr}.`);
+    }
+    return privateKey;
   }
 
   async getStatus() {

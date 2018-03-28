@@ -69,9 +69,4 @@ config.NOT_FOUND_COUNT_BEFORE_RETRY = 3;
 // Gas price for replacement transactions in wei
 config.REPLACEMENT_GAS_PRICE = '40000000000';
 
-// Private keys to use when replacing timeout transactions
-config.PRIVATE_KEYS = {
-  '0xC0Dec0dec0DeC0Dec0dEc0DEC0DEC0DEC0DEC0dE': '0xC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DEC0DE',
-};
-
 module.exports = config;
