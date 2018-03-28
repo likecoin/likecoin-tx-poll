@@ -73,7 +73,7 @@ class RetryTxMonitor extends TxMonitor {
           // timeout
           try {
             // eslint-disable-next-line no-console
-            console.error(`${this.tx.txHash}: Timeout, preparing replacement tx`);
+            console.log(this.tx.txHash, 'timeout, preparing replacement tx');
             const { known, tx: replacementTx } = await this.tx.replace();
             if (!known) {
               await db.collection(config.FIRESTORE_TX_ROOT)
@@ -84,7 +84,7 @@ class RetryTxMonitor extends TxMonitor {
             this.replacementTx = replacementTx;
             return { retryCount: 0, nextLoopDelay: TX_LOOP_INTERVAL };
           } catch (err) {
-            console.error(this.tx.txHash, err); // eslint-disable-line no-console
+            console.error(this.tx.txHash, 'error when replacing tx', err); // eslint-disable-line no-console
             return { retryCount, nextLoopDelay: TX_LOOP_INTERVAL };
           }
         } else {
@@ -97,7 +97,7 @@ class RetryTxMonitor extends TxMonitor {
                 return { retryCount: 0, nextLoopDelay: TX_LOOP_INTERVAL };
               }
             } catch (err) {
-              console.error(this.tx.txHash, err); // eslint-disable-line no-console
+              console.error(this.tx.txHash, 'error when retrying tx', err); // eslint-disable-line no-console
             }
           }
           return { retryCount, nextLoopDelay: RETRY_NOT_FOUND_INTERVAL };
@@ -142,7 +142,8 @@ class RetryTxMonitor extends TxMonitor {
               return { retryCount: 0, nextLoopDelay: TX_LOOP_INTERVAL };
             }
           } catch (err) {
-            console.error(this.tx.txHash, err); // eslint-disable-line no-console
+            // eslint-disable-next-line no-console
+            console.error(this.tx.txHash, `error when retrying replacement tx ${this.replacementTx.txHash}`, err);
           }
         }
         return { retryCount, nextLoopDelay: RETRY_NOT_FOUND_INTERVAL };

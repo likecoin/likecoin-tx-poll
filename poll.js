@@ -22,7 +22,7 @@ class PollTxMonitor extends TxMonitor {
             await this.writeTxStatus(status, { receipt });
             return;
           } catch (err) {
-            console.error(this.tx.txHash, err); // eslint-disable-line no-console
+            console.error(this.tx.txHash, `error when writing tx status (${status})`, err); // eslint-disable-line no-console
           }
           break;
         case STATUS.MINED:
@@ -37,7 +37,8 @@ class PollTxMonitor extends TxMonitor {
               await this.writeTxStatus(STATUS.TIMEOUT);
               return;
             } catch (err) {
-              console.error(this.tx.txHash, err); // eslint-disable-line no-console
+              // eslint-disable-next-line no-console
+              console.error(this.tx.txHash, `error when writing tx status (${STATUS.TIMEOUT})`, err);
             }
           }
           break;

@@ -59,7 +59,7 @@ class TxMonitor {
     try {
       await this.loopBody();
     } catch (err) {
-      console.error(this.tx.txHash, err); // eslint-disable-line no-console
+      console.error(this.tx.txHash, 'error in TxMonitor loop body', err); // eslint-disable-line no-console
     }
     if (this.onFinish) {
       this.onFinish(this);

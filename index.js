@@ -23,7 +23,7 @@ async function main() {
     maxConcurrent: 1,
     minTime: FETCH_INTERVAL,
   });
-  rateLimiter.on('error', console.error); // eslint-disable-line no-console
+  rateLimiter.on('error', err => console.error('error in rateLimiter', err)); // eslint-disable-line no-console
 
   const txMonitors = {};
 
