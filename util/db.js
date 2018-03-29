@@ -23,11 +23,14 @@ function watchTx(callback) {
       .limit(MAX_TX_IN_QUEUE)
       .onSnapshot((snapshot) => {
         snapshot.docChanges
-          .filter(change => change.type === 'added')
           .forEach((change) => {
-            const { doc } = change;
-            callback(doc);
+            const { doc, type } = change;
+            callback(doc, type);
           });
+      }, (err) => {
+        console.error('Firestore error', err); // eslint-disable-line no-console
+        console.error('Terminating...'); // eslint-disable-line no-console
+        process.exit(1);
       });
   });
 }
