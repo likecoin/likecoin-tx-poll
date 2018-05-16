@@ -34,7 +34,7 @@ class PollTxMonitor {
     if (networkTx) {
       statusUpdate.from = networkTx.from;
       statusUpdate.to = networkTx.to;
-      if (networkTx.value > 0) statusUpdate.value = networkTx.value;
+      if (networkTx.value && networkTx.value > 0) statusUpdate.value = networkTx.value;
     }
     if (receipt) {
       ({ blockNumber } = receipt);
