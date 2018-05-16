@@ -27,10 +27,13 @@ class PollTxMonitor {
     this.shouldStop = false;
   }
 
-  async writeTxStatus(receipt) {
+  async writeTxStatus(receipt, networkTx) {
     const statusUpdate = { status: this.status };
     let blockNumber = 0;
     let blockTime = 0;
+    if (networkTx && networkTx.value > 0) {
+      statusUpdate.value = networkTx.value;
+    }
     if (receipt) {
       ({ blockNumber } = receipt);
       statusUpdate.completeBlockNumber = blockNumber;
@@ -92,7 +95,7 @@ class PollTxMonitor {
       }
       let finished = false;
       while (!this.shouldStop) {
-        const { status, receipt } = await this.rateLimiter.schedule(
+        const { status, receipt, networkTx } = await this.rateLimiter.schedule(
           getTransactionStatus,
           this.txHash,
           { requireReceipt: true },
@@ -102,7 +105,7 @@ class PollTxMonitor {
           case STATUS.SUCCESS:
           case STATUS.FAIL:
             try {
-              await this.writeTxStatus(receipt);
+              await this.writeTxStatus(receipt, networkTx);
               finished = true;
             } catch (err) {
               console.error(this.txHash, `Error when writing tx status (${this.status}):`, err); // eslint-disable-line no-console

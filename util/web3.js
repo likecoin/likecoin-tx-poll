@@ -48,7 +48,7 @@ async function getTransactionStatus(txHash, opt) {
   }
   const receipt = await web3.eth.getTransactionReceipt(txHash);
   const status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
-  return { status, receipt };
+  return { status, receipt, networkTx };
 }
 
 function sendSignedTransaction(rawSignedTx) {
