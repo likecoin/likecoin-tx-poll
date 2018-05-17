@@ -41,6 +41,7 @@ class PollTxMonitor {
     const {
       nonce,
       type,
+      delegatorAddress,
     } = this.data;
     let {
       fromId,
@@ -145,6 +146,7 @@ class PollTxMonitor {
       likeAmountUnitStr,
       ETHAmount,
       ETHAmountUnitStr,
+      delegatorAddress,
     });
   }
 
