@@ -1,6 +1,7 @@
 const config = {};
 
 config.FIRESTORE_TX_ROOT = '';
+config.FIRESTORE_USER_ROOT = '';
 
 config.GCLOUD_PUBSUB_MAX_MESSAGES = 10;
 config.GCLOUD_PUBSUB_MAX_WAIT = 1000;

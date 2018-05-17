@@ -31,20 +31,73 @@ class PollTxMonitor {
     const statusUpdate = { status: this.status };
     let blockNumber = 0;
     let blockTime = 0;
+    let fromReferrer;
+    let fromDisplayName;
+    let fromEmail;
+    let toDisplayName;
+    let toEmail;
+    let toReferrer;
+
     const {
-      fromId,
-      from,
-      toId,
-      to,
-      value,
       nonce,
       type,
     } = this.data;
+    let {
+      fromId,
+      toId,
+      value,
+      from,
+      to,
+    } = this.data;
+
     if (networkTx && type === 'transferETH') {
-      statusUpdate.from = networkTx.from;
-      statusUpdate.to = networkTx.to;
-      statusUpdate.value = networkTx.value;
+      ({ from, to, value }) = networkTx;
+      statusUpdate.from = from;
+      statusUpdate.to = to;
+      statusUpdate.value = value;
     }
+
+    try {
+      const fromQuery = db.collection(config.FIRESTORE_USER_ROOT).where('wallet', '==', from).get().then((snapshot) => {
+        if (snapshot.docs.length > 0) {
+          const fromUser = snapshot.docs[0].data();
+          return {
+            fromId: snapshot.docs[0].id,
+            fromDisplayName: fromUser.displayName,
+            fromEmail: fromUser.email,
+            fromReferrer: fromUser.referrer,
+          };
+        }
+        return {};
+      });
+      const toQuery = db.collection(config.FIRESTORE_USER_ROOT).where('wallet', '==', to).get().then((snapshot) => {
+        if (snapshot.docs.length > 0) {
+          const toUser = snapshot.docs[0].data();
+          return {
+            toId: snapshot.docs[0].id,
+            toDisplayName: toUser.displayName,
+            toEmail: toUser.email,
+            toReferrer: toUser.referrer,
+          };
+        }
+        return {};
+      });
+      [{
+        fromId,
+        fromDisplayName,
+        fromEmail,
+        fromReferrer,
+      }, {
+        toId,
+        toDisplayName,
+        toEmail,
+        toReferrer,
+      },
+      ] = await Promise.all([fromQuery, toQuery]);
+    } catch (err) {
+      console.error(err);
+    }
+
     if (receipt) {
       ({ blockNumber } = receipt);
       statusUpdate.completeBlockNumber = blockNumber;
@@ -80,8 +133,14 @@ class PollTxMonitor {
       txType: type,
       fromUser: fromId,
       fromWallet: from,
+      fromDisplayName,
+      fromEmail,
+      fromReferrer,
       toUser: toId,
       toWallet: to,
+      toDisplayName,
+      toEmail,
+      toReferrer,
       likeAmount,
       likeAmountUnitStr,
       ETHAmount,
