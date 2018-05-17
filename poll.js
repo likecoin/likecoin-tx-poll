@@ -31,18 +31,6 @@ class PollTxMonitor {
     const statusUpdate = { status: this.status };
     let blockNumber = 0;
     let blockTime = 0;
-    if (networkTx) {
-      statusUpdate.from = networkTx.from;
-      statusUpdate.to = networkTx.to;
-      if (networkTx.value && networkTx.value > 0) statusUpdate.value = networkTx.value;
-    }
-    if (receipt) {
-      ({ blockNumber } = receipt);
-      statusUpdate.completeBlockNumber = blockNumber;
-      blockTime = (await web3.eth.getBlock(blockNumber)).timestamp * 1000; // convert seconds to ms
-      statusUpdate.completeTs = blockTime;
-    }
-    db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     const {
       fromId,
       from,
@@ -52,6 +40,18 @@ class PollTxMonitor {
       nonce,
       type,
     } = this.data;
+    if (networkTx && type == 'transferETH') {
+      statusUpdate.from = networkTx.from;
+      statusUpdate.to = networkTx.to;
+      statusUpdate.value = networkTx.value;
+    }
+    if (receipt) {
+      ({ blockNumber } = receipt);
+      statusUpdate.completeBlockNumber = blockNumber;
+      blockTime = (await web3.eth.getBlock(blockNumber)).timestamp * 1000; // convert seconds to ms
+      statusUpdate.completeTs = blockTime;
+    }
+    db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     let likeAmount;
     let likeAmountUnitStr;
     let ETHAmount;
