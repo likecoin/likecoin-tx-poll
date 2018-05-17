@@ -40,7 +40,7 @@ class PollTxMonitor {
       nonce,
       type,
     } = this.data;
-    if (networkTx && type == 'transferETH') {
+    if (networkTx && type === 'transferETH') {
       statusUpdate.from = networkTx.from;
       statusUpdate.to = networkTx.to;
       statusUpdate.value = networkTx.value;
