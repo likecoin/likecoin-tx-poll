@@ -47,6 +47,9 @@ async function getTransactionStatus(txHash, opt) {
     return { status: STATUS.CONFIRMED };
   }
   const receipt = await web3.eth.getTransactionReceipt(txHash);
+  if (!receipt) {
+    return { status: STATUS.PENDING };
+  }
   const status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
   return { status, receipt, networkTx };
 }
