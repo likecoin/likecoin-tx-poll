@@ -1,6 +1,8 @@
 /* eslint no-await-in-loop: off */
 
+const axios = require('axios');
 const BigNumber = require('bignumber.js');
+
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config.js');
 const { web3, STATUS, getTransactionStatus } = require('./util/web3.js');
@@ -37,6 +39,7 @@ class PollTxMonitor {
     let toDisplayName;
     let toEmail;
     let toReferrer;
+    let toSubscriptionURL;
 
     const {
       nonce,
@@ -79,6 +82,7 @@ class PollTxMonitor {
             toDisplayName: toUser.displayName,
             toEmail: toUser.email,
             toReferrer: toUser.referrer,
+            toSubscriptionURL: toUser.subscriptionURL,
           };
         }
         return {};
@@ -93,6 +97,7 @@ class PollTxMonitor {
         toDisplayName,
         toEmail,
         toReferrer,
+        toSubscriptionURL,
       },
       ] = await Promise.all([fromQuery, toQuery]);
     } catch (err) {
@@ -148,6 +153,23 @@ class PollTxMonitor {
       ETHAmountUnitStr,
       delegatorAddress,
     });
+    if (toSubscriptionURL) {
+      try {
+        await axios.post(toSubscriptionURL, {
+          completeTs: blockTime,
+          from,
+          status: this.status,
+          to,
+          ts: this.ts,
+          txHash: this.txHash,
+          type,
+          value,
+        });
+      } catch (error) {
+        // eslint-disable-next-line no-console
+        console.error(this.txHash, 'Error when posting to subscriptionURL:', error);
+      }
+    }
   }
 
   async startLoop() {
