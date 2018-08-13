@@ -1,8 +1,8 @@
+const Bottleneck = require('bottleneck');
 const RetryTxMonitor = require('./retry.js');
 const PollTxMonitor = require('./poll.js');
 const config = require('./config/config.js');
 const { watchTx } = require('./util/db.js');
-const Bottleneck = require('bottleneck');
 
 const FETCH_INTERVAL = config.FETCH_INTERVAL || 1000; // fallback: 1s
 
