@@ -1,5 +1,7 @@
 # likecoin-tx-poll
 
+[![Greenkeeper badge](https://badges.greenkeeper.io/likecoin/likecoin-tx-poll.svg)](https://greenkeeper.io/)
+
 > A firestore based ETH tx status poller (and auto resender)
 
 ## Folder structure
