@@ -1,5 +1,5 @@
 # likecoin-tx-poll
-
+[![CircleCI](https://circleci.com/gh/likecoin/likecoin-tx-poll.svg?style=svg)](https://circleci.com/gh/likecoin/likecoin-tx-poll)
 [![Greenkeeper badge](https://badges.greenkeeper.io/likecoin/likecoin-tx-poll.svg)](https://greenkeeper.io/)
 
 > A firestore based ETH tx status poller (and auto resender)
