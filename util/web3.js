@@ -50,7 +50,12 @@ async function getTransactionStatus(txHash, opt) {
   if (!receipt) {
     return { status: STATUS.PENDING };
   }
-  const status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
+  let status;
+  if (typeof (receipt.status) === 'string') {
+    status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
+  } else {
+    status = receipt.status ? STATUS.SUCCESS : STATUS.FAIL;
+  }
   return { status, receipt, networkTx };
 }
 
