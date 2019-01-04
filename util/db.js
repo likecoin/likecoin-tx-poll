@@ -11,6 +11,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 const db = admin.firestore();
+db.settings({ timestampsInSnapshots: true });
 
 function watchTx(callback) {
   const txRef = db.collection(config.FIRESTORE_TX_ROOT);
@@ -24,7 +25,7 @@ function watchTx(callback) {
     let unsubscribe;
     const watch = () => {
       unsubscribe = watchRef.onSnapshot((snapshot) => {
-        snapshot.docChanges
+        snapshot.docChanges()
           .forEach((change) => {
             const { doc, type } = change;
             callback(doc, type);
