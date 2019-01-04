@@ -25,7 +25,7 @@ function watchTx(callback) {
     let unsubscribe;
     const watch = () => {
       unsubscribe = watchRef.onSnapshot((snapshot) => {
-        snapshot.docChanges
+        snapshot.docChanges()
           .forEach((change) => {
             const { doc, type } = change;
             callback(doc, type);
