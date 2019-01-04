@@ -11,6 +11,7 @@ admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
 });
 const db = admin.firestore();
+db.settings({ timestampsInSnapshots: true });
 
 function watchTx(callback) {
   const txRef = db.collection(config.FIRESTORE_TX_ROOT);
