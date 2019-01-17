@@ -10,7 +10,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/pubsub": "^0.22.2",
+    "@google-cloud/pubsub": "^0.23.0",
     "bignumber.js": "^7.2.1",
     "bottleneck": "^2.1.0",
     "firebase-admin": "^6.4.0",
