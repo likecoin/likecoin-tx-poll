@@ -95,17 +95,19 @@ class PollTxMonitor {
         toReferrer,
       },
       ] = await Promise.all([fromQuery, toQuery]);
+
+      if (receipt) {
+        ({ blockNumber } = receipt);
+        statusUpdate.completeBlockNumber = blockNumber;
+        blockTime = (await web3.eth.getBlock(blockNumber)).timestamp
+          * 1000; // convert seconds to ms
+        statusUpdate.completeTs = blockTime;
+      }
+      db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     } catch (err) {
       console.error(err);
     }
 
-    if (receipt) {
-      ({ blockNumber } = receipt);
-      statusUpdate.completeBlockNumber = blockNumber;
-      blockTime = (await web3.eth.getBlock(blockNumber)).timestamp * 1000; // convert seconds to ms
-      statusUpdate.completeTs = blockTime;
-    }
-    db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     let likeAmount;
     let likeAmountUnitStr;
     let ETHAmount;
@@ -151,13 +153,13 @@ class PollTxMonitor {
   }
 
   async startLoop() {
-    try {
-      const startDelay = (this.ts + TIME_BEFORE_FIRST_ENQUEUE) - Date.now();
-      if (startDelay > 0) {
-        await sleep(startDelay);
-      }
-      let finished = false;
-      while (!this.shouldStop) {
+    const startDelay = (this.ts + TIME_BEFORE_FIRST_ENQUEUE) - Date.now();
+    if (startDelay > 0) {
+      await sleep(startDelay);
+    }
+    let finished = false;
+    while (!this.shouldStop) {
+      try {
         const { status, receipt, networkTx } = await this.rateLimiter.schedule(
           getTransactionStatus,
           this.txHash,
@@ -197,9 +199,9 @@ class PollTxMonitor {
           break;
         }
         await sleep(TX_LOOP_INTERVAL);
+      } catch (err) {
+        console.error(this.txHash, 'Error in PollTxMonitor loop:', err); // eslint-disable-line no-console
       }
-    } catch (err) {
-      console.error(this.txHash, 'Error in PollTxMonitor loop:', err); // eslint-disable-line no-console
     }
     if (this.onFinish) {
       this.onFinish(this);

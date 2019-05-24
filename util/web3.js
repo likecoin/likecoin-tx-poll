@@ -29,34 +29,39 @@ const STATUS = {
 };
 
 async function getTransactionStatus(txHash, opt) {
-  const requireReceipt = opt && opt.requireReceipt;
-  const networkTx = await web3.eth.getTransaction(txHash);
-  if (!networkTx) {
-    return { status: STATUS.NOT_FOUND };
-  }
-  if (!networkTx.blockNumber) {
+  try {
+    const requireReceipt = opt && opt.requireReceipt;
+    const networkTx = await web3.eth.getTransaction(txHash);
+    if (!networkTx) {
+      return { status: STATUS.NOT_FOUND };
+    }
+    if (!networkTx.blockNumber) {
+      return { status: STATUS.PENDING };
+    }
+    if (!currentBlockNumber) {
+      currentBlockNumber = await web3.eth.getBlockNumber();
+    }
+    if (currentBlockNumber - networkTx.blockNumber < CONFIRMATION_NEEDED) {
+      return { status: STATUS.MINED };
+    }
+    if (!requireReceipt) {
+      return { status: STATUS.CONFIRMED };
+    }
+    const receipt = await web3.eth.getTransactionReceipt(txHash);
+    if (!receipt) {
+      return { status: STATUS.PENDING };
+    }
+    let status;
+    if (typeof (receipt.status) === 'string') {
+      status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
+    } else {
+      status = receipt.status ? STATUS.SUCCESS : STATUS.FAIL;
+    }
+    return { status, receipt, networkTx };
+  } catch (err) {
+    console.error(err); // eslint-disable-line no-console
     return { status: STATUS.PENDING };
   }
-  if (!currentBlockNumber) {
-    currentBlockNumber = await web3.eth.getBlockNumber();
-  }
-  if (currentBlockNumber - networkTx.blockNumber < CONFIRMATION_NEEDED) {
-    return { status: STATUS.MINED };
-  }
-  if (!requireReceipt) {
-    return { status: STATUS.CONFIRMED };
-  }
-  const receipt = await web3.eth.getTransactionReceipt(txHash);
-  if (!receipt) {
-    return { status: STATUS.PENDING };
-  }
-  let status;
-  if (typeof (receipt.status) === 'string') {
-    status = (Number.parseInt(receipt.status, 16) === 1) ? STATUS.SUCCESS : STATUS.FAIL;
-  } else {
-    status = receipt.status ? STATUS.SUCCESS : STATUS.FAIL;
-  }
-  return { status, receipt, networkTx };
 }
 
 function sendSignedTransaction(rawSignedTx) {
