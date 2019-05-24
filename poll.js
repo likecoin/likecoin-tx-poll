@@ -95,17 +95,19 @@ class PollTxMonitor {
         toReferrer,
       },
       ] = await Promise.all([fromQuery, toQuery]);
+
+      if (receipt) {
+        ({ blockNumber } = receipt);
+        statusUpdate.completeBlockNumber = blockNumber;
+        blockTime = (await web3.eth.getBlock(blockNumber)).timestamp
+          * 1000; // convert seconds to ms
+        statusUpdate.completeTs = blockTime;
+      }
+      db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     } catch (err) {
       console.error(err);
     }
 
-    if (receipt) {
-      ({ blockNumber } = receipt);
-      statusUpdate.completeBlockNumber = blockNumber;
-      blockTime = (await web3.eth.getBlock(blockNumber)).timestamp * 1000; // convert seconds to ms
-      statusUpdate.completeTs = blockTime;
-    }
-    db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
     let likeAmount;
     let likeAmountUnitStr;
     let ETHAmount;
