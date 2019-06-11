@@ -10,7 +10,11 @@ const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider));
 let currentBlockNumber;
 
 setInterval(async () => {
-  currentBlockNumber = await web3.eth.getBlockNumber();
+  try {
+    currentBlockNumber = await web3.eth.getBlockNumber();
+  } catch (err) {
+    console.error(err);
+  }
 }, BLOCK_TIME);
 
 const STATUS = {
