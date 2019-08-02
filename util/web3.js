@@ -92,9 +92,14 @@ async function resendTransaction(rawSignedTx, txHash) {
   return known;
 }
 
+async function getBlockTime(blockNumber) {
+  return (await web3.eth.getBlock(blockNumber)).timestamp * 1000;
+}
+
 module.exports = {
   web3,
   STATUS,
   getTransactionStatus,
   resendTransaction,
+  getBlockTime,
 };

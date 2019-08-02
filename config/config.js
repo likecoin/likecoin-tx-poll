@@ -3,6 +3,9 @@ const config = {};
 config.FIRESTORE_TX_ROOT = '';
 config.FIRESTORE_USER_ROOT = '';
 
+config.COSMOS_LCD_ENDPOINT = '';
+config.COSMOS_CHAIN_ID = 'likechain-cosmos-testnet-2';
+
 config.GCLOUD_PUBSUB_MAX_MESSAGES = 10;
 config.GCLOUD_PUBSUB_MAX_WAIT = 1000;
 config.GCLOUD_PUBSUB_ENABLE = false;
