@@ -1,10 +1,11 @@
 const Web3 = require('web3');
 const config = require('../config/config.js');
+const { IS_TESTNET, STATUS } = require('../constant');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
 const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
-const web3Provider = process.env.IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://cloudflare-eth.com';
+const web3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://cloudflare-eth.com';
 const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider));
 
 let currentBlockNumber;
@@ -16,21 +17,6 @@ setInterval(async () => {
     console.error(err);
   }
 }, BLOCK_TIME);
-
-const STATUS = {
-  // PENDING is the initial status of the transaction in database
-  PENDING: 'pending',
-
-  // SUCCESS, FAIL, TIMEOUT status will be written into database
-  SUCCESS: 'success',
-  FAIL: 'fail',
-  TIMEOUT: 'timeout',
-
-  // NOT_FOUND, MINED, CONFIRMED status will be used in this app internally only
-  NOT_FOUND: 'not found',
-  MINED: 'mined',
-  CONFIRMED: 'confirmed',
-};
 
 async function getTransactionStatus(txHash, opt) {
   try {

@@ -80,7 +80,7 @@ class RetryTxMonitor {
 
   async getTransactionStatus() {
     if (this.data.type === 'cosmosTransfer') {
-      return getCosmosTxStatus(this.txHash, { requireReceipt: true });
+      return getCosmosTxStatus(this.txHash);
     }
     return getWeb3TxStatus(this.txHash, { requireReceipt: true });
   }

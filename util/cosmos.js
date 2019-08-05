@@ -2,6 +2,7 @@ const axios = require('axios');
 const http = require('http');
 const https = require('https');
 const config = require('../config/config.js');
+const { STATUS } = require('../constant');
 
 const {
   COSMOS_LCD_ENDPOINT,
@@ -31,21 +32,6 @@ async function updateCurrentHeight() {
   setTimeout(() => updateCurrentHeight(), COSMOS_BLOCK_TIME);
 }
 updateCurrentHeight();
-
-const STATUS = {
-  // PENDING is the initial status of the transaction in database
-  PENDING: 'pending',
-
-  // SUCCESS, FAIL, TIMEOUT status will be written into database
-  SUCCESS: 'success',
-  FAIL: 'fail',
-  TIMEOUT: 'timeout',
-
-  // NOT_FOUND, MINED, CONFIRMED status will be used in this app internally only
-  NOT_FOUND: 'not found',
-  MINED: 'mined',
-  CONFIRMED: 'confirmed',
-};
 
 async function getTransactionStatus(txHash) {
   try {
