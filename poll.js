@@ -3,7 +3,16 @@
 const BigNumber = require('bignumber.js');
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config.js');
-const { web3, STATUS, getTransactionStatus } = require('./util/web3.js');
+const {
+  getBlockTime: getWeb3Block,
+  STATUS,
+  getTransactionStatus: getWeb3TxStatus,
+} = require('./util/web3.js');
+const {
+  getBlockTime: getCosmosBlock,
+  amountToLIKE,
+  getTransactionStatus: getCosmosTxStatus,
+} = require('./util/cosmos.js');
 const { db } = require('./util/db.js');
 
 const PUBSUB_TOPIC_MISC = 'misc';
@@ -37,6 +46,12 @@ class PollTxMonitor {
       delegatorAddress,
       fromId,
       toId,
+      feeAmount,
+      gas,
+      memo,
+      accountNumber,
+      sequence,
+      amount,
     } = this.data;
     let {
       value,
@@ -55,8 +70,11 @@ class PollTxMonitor {
       if (receipt) {
         ({ blockNumber } = receipt);
         statusUpdate.completeBlockNumber = blockNumber;
-        blockTime = (await web3.eth.getBlock(blockNumber)).timestamp
-          * 1000; // convert seconds to ms
+        if (type === 'cosmosTransfer') {
+          blockTime = await getCosmosBlock(blockNumber);
+        } else {
+          blockTime = await getWeb3Block(blockNumber);
+        }
         statusUpdate.completeTs = blockTime;
       }
       db.collection(config.FIRESTORE_TX_ROOT).doc(this.txHash).update(statusUpdate);
@@ -73,6 +91,10 @@ class PollTxMonitor {
         case 'transferETH':
           ETHAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
           ETHAmountUnitStr = new BigNumber(value).toFixed();
+          break;
+        case 'cosmosTransfer':
+          likeAmount = amountToLIKE(amount);
+          likeAmountUnitStr = amountToLIKE(amount).toString();
           break;
         default:
           likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
@@ -99,7 +121,20 @@ class PollTxMonitor {
       ETHAmount,
       ETHAmountUnitStr,
       delegatorAddress,
+      feeAmount,
+      gas,
+      memo,
+      accountNumber,
+      sequence,
+      amount,
     });
+  }
+
+  async getTransactionStatus() {
+    if (this.data.type === 'cosmosTransfer') {
+      return getCosmosTxStatus(this.txHash);
+    }
+    return getWeb3TxStatus(this.txHash, { requireReceipt: true });
   }
 
   async startLoop() {
@@ -111,9 +146,7 @@ class PollTxMonitor {
     while (!this.shouldStop) {
       try {
         const { status, receipt, networkTx } = await this.rateLimiter.schedule(
-          getTransactionStatus,
-          this.txHash,
-          { requireReceipt: true },
+          () => this.getTransactionStatus(),
         );
         this.status = status;
         switch (status) {

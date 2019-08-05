@@ -3,7 +3,15 @@
 const BigNumber = require('bignumber.js');
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config.js');
-const { STATUS, getTransactionStatus, resendTransaction } = require('./util/web3.js');
+const {
+  STATUS,
+  getTransactionStatus: getWeb3TxStatus,
+  resendTransaction: resendWeb3Tx,
+} = require('./util/web3.js');
+const {
+  getTransactionStatus: getCosmosTxStatus,
+  resendTransaction: resendCosmosTx,
+} = require('./util/cosmos.js');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
@@ -70,6 +78,20 @@ class RetryTxMonitor {
     });
   }
 
+  async getTransactionStatus() {
+    if (this.data.type === 'cosmosTransfer') {
+      return getCosmosTxStatus(this.txHash);
+    }
+    return getWeb3TxStatus(this.txHash, { requireReceipt: true });
+  }
+
+  async resendTransaction() {
+    if (this.data.type === 'cosmosTransfer') {
+      return resendCosmosTx(this.data.rawSignedTx, this.txHash);
+    }
+    return resendWeb3Tx(this.data.rawSignedTx, this.txHash);
+  }
+
   async startLoop() {
     try {
       const startDelay = (this.ts + TIME_BEFORE_FIRST_ENQUEUE) - Date.now();
@@ -79,7 +101,7 @@ class RetryTxMonitor {
       let finished = false;
       let count = 0;
       while (!this.shouldStop) {
-        const { status } = await this.rateLimiter.schedule(getTransactionStatus, this.txHash);
+        const { status } = await this.rateLimiter.schedule(() => this.getTransactionStatus());
         this.status = status;
         let nextLoopDelay = TX_LOOP_INTERVAL;
         switch (this.status) {
@@ -95,7 +117,7 @@ class RetryTxMonitor {
             count += 1;
             if (count >= NOT_FOUND_COUNT_BEFORE_RETRY) {
               try {
-                const known = await resendTransaction(this.data.rawSignedTx, this.txHash);
+                const known = await this.resendTransaction();
                 if (known) {
                   count = 0;
                   nextLoopDelay = TX_LOOP_INTERVAL;
