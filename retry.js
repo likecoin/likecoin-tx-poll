@@ -79,14 +79,14 @@ class RetryTxMonitor {
   }
 
   async getTransactionStatus() {
-    if (this.data.type === 'cosmosTransfer') {
+    if (this.data.type.includes('cosmos')) {
       return getCosmosTxStatus(this.txHash);
     }
     return getWeb3TxStatus(this.txHash, { requireReceipt: true });
   }
 
   async resendTransaction() {
-    if (this.data.type === 'cosmosTransfer') {
+    if (this.data.type.includes('cosmos')) {
       return resendCosmosTx(this.data.rawSignedTx, this.txHash);
     }
     return resendWeb3Tx(this.data.rawSignedTx, this.txHash);
