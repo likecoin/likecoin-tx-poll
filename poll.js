@@ -70,7 +70,7 @@ class PollTxMonitor {
       if (receipt) {
         ({ blockNumber } = receipt);
         statusUpdate.completeBlockNumber = blockNumber;
-        if (type === 'cosmosTransfer') {
+        if (type.includes('cosmos')) {
           blockTime = await getCosmosBlock(blockNumber);
         } else {
           blockTime = await getWeb3Block(blockNumber);
@@ -87,19 +87,15 @@ class PollTxMonitor {
     let ETHAmount;
     let ETHAmountUnitStr;
     if (value !== undefined) {
-      switch (type) {
-        case 'transferETH':
-          ETHAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-          ETHAmountUnitStr = new BigNumber(value).toFixed();
-          break;
-        case 'cosmosTransfer':
-          likeAmount = amountToLIKE(amount);
-          likeAmountUnitStr = amountToLIKE(amount).toString();
-          break;
-        default:
-          likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-          likeAmountUnitStr = new BigNumber(value).toFixed();
-          break;
+      if (type === 'transferETH') {
+        ETHAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
+        ETHAmountUnitStr = new BigNumber(value).toFixed();
+      } else if (type.includes('cosmos')) {
+        likeAmount = amountToLIKE(amount);
+        likeAmountUnitStr = amountToLIKE(amount).toString();
+      } else {
+        likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
+        likeAmountUnitStr = new BigNumber(value).toFixed();
       }
     }
     publisher.publish(PUBSUB_TOPIC_MISC, {
@@ -131,7 +127,7 @@ class PollTxMonitor {
   }
 
   async getTransactionStatus() {
-    if (this.data.type === 'cosmosTransfer') {
+    if (this.data.type.includes('cosmos')) {
       return getCosmosTxStatus(this.txHash);
     }
     return getWeb3TxStatus(this.txHash, { requireReceipt: true });
