@@ -1,21 +1,20 @@
 /* eslint no-await-in-loop: off */
 
-const BigNumber = require('bignumber.js');
 const publisher = require('./util/gcloudPub');
-const config = require('./config/config.js');
+const config = require('./config/config');
 const {
   STATUS,
   getTransactionStatus: getWeb3TxStatus,
   resendTransaction: resendWeb3Tx,
-} = require('./util/web3.js');
+} = require('./util/web3');
 const {
   getTransactionStatus: getCosmosTxStatus,
   resendTransaction: resendCosmosTx,
-} = require('./util/cosmos.js');
+} = require('./util/cosmos');
+const { getTxAmountForLog } = require('./util/misc');
+
 
 const PUBSUB_TOPIC_MISC = 'misc';
-
-const ONE_LIKE = new BigNumber(10).pow(18);
 
 const TX_LOOP_INTERVAL = config.TX_LOOP_INTERVAL || 90 * 1000; // fallback: 90s
 const RETRY_NOT_FOUND_INTERVAL = config.RETRY_NOT_FOUND_INTERVAL || 30 * 1000; // fallback: 30s
@@ -42,26 +41,15 @@ class RetryTxMonitor {
       from,
       toId,
       to,
-      value,
       nonce,
       type,
     } = this.data;
-    let likeAmount;
-    let likeAmountUnitStr;
-    let ETHAmount;
-    let ETHAmountUnitStr;
-    if (value !== undefined) {
-      switch (type) {
-        case 'transferETH':
-          ETHAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-          ETHAmountUnitStr = new BigNumber(value).toFixed();
-          break;
-        default:
-          likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-          likeAmountUnitStr = new BigNumber(value).toFixed();
-          break;
-      }
-    }
+    const {
+      likeAmount,
+      likeAmountUnitStr,
+      ETHAmount,
+      ETHAmountUnitStr,
+    } = getTxAmountForLog(this.data);
     publisher.publish(PUBSUB_TOPIC_MISC, {
       logType,
       txHash: this.txHash,

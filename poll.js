@@ -1,23 +1,21 @@
 /* eslint no-await-in-loop: off */
 
-const BigNumber = require('bignumber.js');
 const publisher = require('./util/gcloudPub');
-const config = require('./config/config.js');
+const config = require('./config/config');
 const {
   getBlockTime: getWeb3Block,
   STATUS,
   getTransactionStatus: getWeb3TxStatus,
-} = require('./util/web3.js');
+} = require('./util/web3');
 const {
   getBlockTime: getCosmosBlock,
-  amountToLIKE,
   getTransactionStatus: getCosmosTxStatus,
-} = require('./util/cosmos.js');
-const { db } = require('./util/db.js');
+} = require('./util/cosmos');
+const { db } = require('./util/db');
+const { getTxAmountForLog } = require('./util/misc');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
-const ONE_LIKE = new BigNumber(10).pow(18);
 
 const TIME_LIMIT = config.TIME_LIMIT || 60 * 60 * 1000 * 24; // fallback: 1 day
 const TX_LOOP_INTERVAL = config.TX_LOOP_INTERVAL || 30 * 1000; // fallback: 30s
@@ -82,22 +80,13 @@ class PollTxMonitor {
       console.error(err);
     }
 
-    let likeAmount;
-    let likeAmountUnitStr;
-    let ETHAmount;
-    let ETHAmountUnitStr;
-    if (value !== undefined) {
-      if (type === 'transferETH') {
-        ETHAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-        ETHAmountUnitStr = new BigNumber(value).toFixed();
-      } else if (type.includes('cosmos')) {
-        likeAmount = amountToLIKE(amount);
-        likeAmountUnitStr = amountToLIKE(amount).toString();
-      } else {
-        likeAmount = new BigNumber(value).dividedBy(ONE_LIKE).toNumber();
-        likeAmountUnitStr = new BigNumber(value).toFixed();
-      }
-    }
+    const {
+      likeAmount,
+      likeAmountUnitStr,
+      ETHAmount,
+      ETHAmountUnitStr,
+    } = getTxAmountForLog(this.data);
+
     publisher.publish(PUBSUB_TOPIC_MISC, {
       logType: 'eventStatus',
       txHash: this.txHash,
