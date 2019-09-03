@@ -5,6 +5,7 @@ const config = require('../config/config.js');
 const { STATUS } = require('../constant');
 
 const {
+  COSMOS_CHAIN_ID,
   COSMOS_LCD_ENDPOINT,
   COSMOS_BLOCK_TIME = 5000,
 } = config;
@@ -31,7 +32,7 @@ async function updateCurrentHeight() {
   }
   setTimeout(() => updateCurrentHeight(), COSMOS_BLOCK_TIME);
 }
-updateCurrentHeight();
+if (COSMOS_LCD_ENDPOINT && COSMOS_CHAIN_ID) updateCurrentHeight();
 
 async function getTransactionStatus(txHash) {
   try {
