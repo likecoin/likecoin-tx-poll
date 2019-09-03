@@ -20,6 +20,7 @@ const STATUS = {
 };
 
 module.exports = {
+  IS_TESTNET,
   TEST_MODE,
   ETH_NETWORK_NAME,
   STATUS,
