@@ -28,12 +28,12 @@ function getTxAmountForLog(tx) {
       likeAmountUnitStr = total.toString();
     } else {
       let total;
-      if (Array.isArray(amount)) {
-        total = tx.value.reduce(
+      if (Array.isArray(value)) {
+        total = value.reduce(
           (acc, v) => acc.plus(new BigNumber(v).dividedBy(ONE_LIKE)), new BigNumber(0),
         );
       } else {
-        total = new BigNumber(total).dividedBy(ONE_LIKE);
+        total = new BigNumber(value).dividedBy(ONE_LIKE);
       }
       likeAmount = total.toNumber();
       likeAmountUnitStr = total.toFixed();
