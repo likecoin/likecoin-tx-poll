@@ -1,4 +1,5 @@
 /* eslint no-await-in-loop: off */
+const BigNumber = require('bignumber.js');
 
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config');
@@ -6,6 +7,7 @@ const {
   getBlockTime: getWeb3Block,
   STATUS,
   getTransactionStatus: getWeb3TxStatus,
+  getTransfersFromReceipt: getWeb3TransferFromReceipt,
 } = require('./util/web3');
 const {
   getBlockTime: getCosmosBlock,
@@ -62,6 +64,26 @@ class PollTxMonitor {
       statusUpdate.from = from;
       statusUpdate.to = to;
       statusUpdate.value = value;
+    } else if (type.includes('cosmos')) {
+      // TODO: handle cosmos transfer value if needed
+    } else if (receipt && (type === 'transfer' || type === 'transferDelegated')) {
+      // replace ETH LIKE transfer value
+      const transfers = getWeb3TransferFromReceipt(receipt);
+      let tx = transfers.find(
+        transfer => transfer.to.toLowerCase() !== networkTx.from.toLowerCase(),
+      );
+      if (!tx) {
+        const txs = transfers.filter(transfer => (new BigNumber(transfer.value)).gt(0));
+        if (txs.length) {
+          if (txs.length === 1) [tx] = txs;
+          else [tx] = txs.slice(-1); // assume last entry is tranfser
+        }
+      }
+      if (tx) {
+        statusUpdate.from = tx.from;
+        statusUpdate.to = tx.to;
+        statusUpdate.value = tx.value;
+      }
     }
 
     try {
@@ -85,7 +107,11 @@ class PollTxMonitor {
       likeAmountUnitStr,
       ETHAmount,
       ETHAmountUnitStr,
-    } = getTxAmountForLog(this.data);
+    } = getTxAmountForLog({
+      value,
+      amount,
+      type,
+    });
 
     publisher.publish(PUBSUB_TOPIC_MISC, {
       logType: 'eventStatus',
