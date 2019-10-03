@@ -69,20 +69,24 @@ class PollTxMonitor {
     } else if (receipt && (type === 'transfer' || type === 'transferDelegated')) {
       // replace ETH LIKE transfer value
       const transfers = getWeb3TransferFromReceipt(receipt);
-      let tx = transfers.find(
-        transfer => transfer.to.toLowerCase() !== networkTx.from.toLowerCase(),
-      );
-      if (!tx) {
-        const txs = transfers.filter(transfer => (new BigNumber(transfer.value)).gt(0));
-        if (txs.length) {
-          if (txs.length === 1) [tx] = txs;
-          else [tx] = txs.slice(-1); // assume last entry is tranfser
+      if (!transfers || !transfers.length) {
+        statusUpdate.status = STATUS.FAIL;
+      } else {
+        let tx = transfers.find(
+          transfer => transfer.to.toLowerCase() !== networkTx.from.toLowerCase(),
+        );
+        if (!tx) {
+          const txs = transfers.filter(transfer => (new BigNumber(transfer.value)).gt(0));
+          if (txs.length) {
+            if (txs.length === 1) [tx] = txs;
+            else [tx] = txs.slice(-1); // assume last entry is tranfser
+          }
         }
-      }
-      if (tx) {
-        statusUpdate.from = tx.from;
-        statusUpdate.to = tx.to;
-        statusUpdate.value = tx.value;
+        if (tx) {
+          statusUpdate.from = tx.from;
+          statusUpdate.to = tx.to;
+          statusUpdate.value = tx.value;
+        }
       }
     }
 

@@ -96,6 +96,7 @@ async function getBlockTime(blockNumber) {
 }
 
 function getTransfersFromReceipt(receipt) {
+  if (receipt.to !== LIKE_COIN_ADDRESS) return [];
   const { inputs } = LIKE_COIN_ABI.filter(entity => entity.name === 'Transfer' && entity.type === 'event')[0];
   return receipt.logs
     .filter(log => log.address.toLowerCase() === LIKE_COIN_ADDRESS.toLowerCase())
