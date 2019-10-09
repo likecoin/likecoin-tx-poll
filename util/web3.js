@@ -1,5 +1,6 @@
 const Web3 = require('web3');
 const config = require('../config/config.js');
+const { LIKE_COIN_ABI, LIKE_COIN_ADDRESS } = require('../constant/contract/likecoin');
 const { IS_TESTNET, STATUS } = require('../constant');
 const { timeout } = require('./misc');
 
@@ -94,10 +95,19 @@ async function getBlockTime(blockNumber) {
   return (await web3.eth.getBlock(blockNumber)).timestamp * 1000;
 }
 
+function getTransfersFromReceipt(receipt) {
+  if (receipt.to.toLowerCase() !== LIKE_COIN_ADDRESS.toLowerCase()) return [];
+  const { inputs } = LIKE_COIN_ABI.filter(entity => entity.name === 'Transfer' && entity.type === 'event')[0];
+  return receipt.logs
+    .filter(log => log.address.toLowerCase() === LIKE_COIN_ADDRESS.toLowerCase())
+    .map(log => web3.eth.abi.decodeLog(inputs, log.data, log.topics.slice(1)));
+}
+
 module.exports = {
   web3,
   STATUS,
   getTransactionStatus,
   resendTransaction,
+  getTransfersFromReceipt,
   getBlockTime,
 };
