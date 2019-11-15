@@ -62,6 +62,10 @@ async function getTransactionStatus(txHash, opt) {
     }
     return { status, receipt, networkTx };
   } catch (err) {
+    const errMessage = (err.message || err).toString();
+    if (errMessage.includes('Rate limiting threshold exceeded')) {
+      await timeout(60000);
+    }
     console.error(err); // eslint-disable-line no-console
     return { status: STATUS.PENDING };
   }
@@ -85,6 +89,10 @@ async function resendTransaction(rawSignedTx, txHash) {
       console.log(`Retry but known transaction ${txHash}`); // eslint-disable-line no-console
       known = true;
     } else {
+      const errMessage = (err.message || err).toString();
+      if (errMessage.includes('Rate limiting threshold exceeded')) {
+        await timeout(60000);
+      }
       throw err;
     }
   }
@@ -92,7 +100,16 @@ async function resendTransaction(rawSignedTx, txHash) {
 }
 
 async function getBlockTime(blockNumber) {
-  return (await web3.eth.getBlock(blockNumber)).timestamp * 1000;
+  try {
+    const ts = (await web3.eth.getBlock(blockNumber)).timestamp * 1000;
+    return ts;
+  } catch (err) {
+    const errMessage = (err.message || err).toString();
+    if (errMessage.includes('Rate limiting threshold exceeded')) {
+      await timeout(60000);
+    }
+    throw err;
+  }
 }
 
 function getTransfersFromReceipt(receipt) {
