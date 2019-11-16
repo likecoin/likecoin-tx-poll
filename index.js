@@ -1,4 +1,6 @@
+const express = require('express');
 const Bottleneck = require('bottleneck');
+
 const RetryTxMonitor = require('./retry.js');
 const PollTxMonitor = require('./poll.js');
 const config = require('./config/config.js');
@@ -59,3 +61,15 @@ async function main() {
 }
 
 main();
+
+// health check
+const app = express();
+
+app.get('/healthz', (req, res) => {
+  res.sendStatus(200);
+});
+const port = process.env.PORT || config.PORT || 3000;
+app.listen(port, () => {
+  console.log(`Deploying on ${process.env.IS_TESTNET ? 'rinkeby' : 'mainnet'}`);
+  console.log(`Listening on port ${port}!`);
+});
