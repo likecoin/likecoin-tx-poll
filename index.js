@@ -5,6 +5,7 @@ const RetryTxMonitor = require('./retry.js');
 const PollTxMonitor = require('./poll.js');
 const config = require('./config/config.js');
 const { watchTx } = require('./util/db.js');
+const { web3 } = require('./util/web3.js');
 
 const FETCH_INTERVAL = config.FETCH_INTERVAL || 1000; // fallback: 1s
 
@@ -65,9 +66,16 @@ main();
 // health check
 const app = express();
 
-app.get('/healthz', (req, res) => {
-  res.sendStatus(200);
+app.get('/healthz', async (req, res) => {
+  try {
+    await web3.eth.getBlockNumber();
+    res.sendStatus(200);
+  } catch (err) {
+    console.error(err);
+    res.sendStatus(500);
+  }
 });
+
 const port = process.env.PORT || config.PORT || 3000;
 app.listen(port, () => {
   console.log(`Deploying on ${process.env.IS_TESTNET ? 'rinkeby' : 'mainnet'}`);
