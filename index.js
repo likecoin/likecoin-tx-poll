@@ -68,8 +68,8 @@ const app = express();
 
 app.get('/healthz', async (req, res) => {
   try {
-    await web3.eth.getBlockNumber();
-    res.sendStatus(200);
+    const block = await web3.eth.getBlockNumber();
+    res.status(200).send(block.toString());
   } catch (err) {
     console.error(err);
     res.sendStatus(500);
