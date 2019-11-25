@@ -7,8 +7,10 @@ const { timeout } = require('./misc');
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
 const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
-const web3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://eth.likecoin.store';
+const web3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://mainnet.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6';
+const pollingWeb3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://eth.likecoin.store';
 const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider));
+const pollingWeb3 = new Web3(new Web3.providers.HttpProvider(pollingWeb3Provider));
 
 let currentBlockNumber;
 const isPollingBlock = true;
@@ -17,7 +19,7 @@ const blockPoller = async () => {
   while (isPollingBlock) {
     /* eslint-disable no-await-in-loop */
     try {
-      currentBlockNumber = await web3.eth.getBlockNumber();
+      currentBlockNumber = await pollingWeb3.eth.getBlockNumber();
     } catch (err) {
       const errMessage = (err.message || err).toString();
       if (errMessage.includes('Rate limiting threshold exceeded')) {
