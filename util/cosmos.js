@@ -14,6 +14,7 @@ const api = axios.create({
   baseURL: COSMOS_LCD_ENDPOINT,
   httpAgent: new http.Agent({ keepAlive: true }),
   httpsAgent: new https.Agent({ keepAlive: true }),
+  timeout: 30000,
 });
 
 let currentHeightNumber;
