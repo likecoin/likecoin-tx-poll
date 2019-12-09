@@ -62,4 +62,10 @@ config.WATCH_QUERIES = [
   [['status', '==', 'pending']],
 ];
 
+// Exit code for process suicide when receiving suicide request
+config.SUICIDE_EXIT_CODE = 17;
+
+// For authenticating suicide request. Empty string means no auth.
+config.SUICIDE_AUTH_CODE = 'mUffinerulCa+bZ+5Vjlxg==';
+
 module.exports = config;

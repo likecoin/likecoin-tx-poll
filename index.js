@@ -76,6 +76,24 @@ app.get('/healthz', async (req, res) => {
   }
 });
 
+app.post('/suicide', async (req, res) => {
+  if (config.SUICIDE_AUTH_CODE) {
+    const { authorization } = req.headers;
+    if (!authorization) {
+      res.sendStatus(401);
+      return;
+    }
+    const [type, value] = authorization.split(' ');
+    if (type !== 'Bearer' || value !== config.SUICIDE_AUTH_CODE) {
+      res.sendStatus(401);
+      return;
+    }
+  }
+  res.sendStatus(200);
+  console.log('Got suicide request, killing service.');
+  process.exit(config.SUICIDE_EXIT_CODE || 1);
+});
+
 const port = process.env.PORT || config.PORT || 3000;
 app.listen(port, () => {
   console.log(`Deploying on ${process.env.IS_TESTNET ? 'rinkeby' : 'mainnet'}`);
