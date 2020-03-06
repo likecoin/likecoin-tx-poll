@@ -10,6 +10,9 @@ const {
   COSMOS_BLOCK_TIME = 5000,
 } = config;
 
+export const CONFIRMATION_NEEDED = 1;
+export const BLOCK_TIME = COSMOS_BLOCK_TIME;
+
 const api = axios.create({
   baseURL: COSMOS_LCD_ENDPOINT,
   httpAgent: new http.Agent({ keepAlive: true }),

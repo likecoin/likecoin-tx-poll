@@ -6,11 +6,13 @@ const config = require('./config/config');
 const {
   getBlockTime: getWeb3Block,
   STATUS,
+  BLOCK_TIME: ETH_BLOCK_TIME,
   getTransactionStatus: getWeb3TxStatus,
   getTransfersFromReceipt: getWeb3TransferFromReceipt,
 } = require('./util/web3');
 const {
   getBlockTime: getCosmosBlock,
+  BLOCK_TIME: COSMOS_BLOCK_TIME,
   getTransactionStatus: getCosmosTxStatus,
 } = require('./util/cosmos');
 const { db } = require('./util/db');
@@ -20,8 +22,7 @@ const PUBSUB_TOPIC_MISC = 'misc';
 
 
 const TIME_LIMIT = config.TIME_LIMIT || 60 * 60 * 1000 * 24; // fallback: 1 day
-const TX_LOOP_INTERVAL = config.TX_LOOP_INTERVAL || 30 * 1000; // fallback: 30s
-const TIME_BEFORE_FIRST_ENQUEUE = config.TIME_BEFORE_FIRST_ENQUEUE || 60 * 1000; // fallback: 60s
+const TIME_BEFORE_FIRST_ENQUEUE = config.TIME_BEFORE_FIRST_ENQUEUE || 0;
 
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
@@ -153,7 +154,9 @@ class PollTxMonitor {
   }
 
   async startLoop() {
-    const startDelay = (this.ts + TIME_BEFORE_FIRST_ENQUEUE) - Date.now();
+    const blockTime = this.data.type === 'cosmosTransfer' ? COSMOS_BLOCK_TIME : ETH_BLOCK_TIME;
+    const delayTime = Math.Max(TIME_BEFORE_FIRST_ENQUEUE, blockTime);
+    const startDelay = (this.ts + delayTime) - Date.now();
     if (startDelay > 0) {
       await sleep(startDelay);
     }
@@ -196,7 +199,7 @@ class PollTxMonitor {
         if (finished) {
           break;
         }
-        await sleep(TX_LOOP_INTERVAL);
+        await sleep(blockTime);
       } catch (err) {
         console.error(this.txHash, 'Error in PollTxMonitor loop:', err); // eslint-disable-line no-console
       }
