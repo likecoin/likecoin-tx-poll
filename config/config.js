@@ -13,9 +13,6 @@ config.GCLOUD_PUBSUB_ENABLE = false;
 // Queue mode, either 'RETRY' or 'POLL'
 config.QUEUE_MODE = 'POLL';
 
-// Number of milliseconds before re-enqueuing a transaction
-config.TX_LOOP_INTERVAL = 30 * 1000;
-
 // Minimum number of milliseconds between each loop iteration
 config.FETCH_INTERVAL = 1000;
 
