@@ -10,8 +10,8 @@ const {
   COSMOS_BLOCK_TIME = 5000,
 } = config;
 
-export const CONFIRMATION_NEEDED = 1;
-export const BLOCK_TIME = COSMOS_BLOCK_TIME;
+const CONFIRMATION_NEEDED = 1;
+const BLOCK_TIME = COSMOS_BLOCK_TIME;
 
 const api = axios.create({
   baseURL: COSMOS_LCD_ENDPOINT,
@@ -89,6 +89,8 @@ function amountToLIKE(likecoin) {
 }
 
 module.exports = {
+  CONFIRMATION_NEEDED,
+  BLOCK_TIME,
   getTransactionStatus,
   resendTransaction,
   getBlockTime,

@@ -4,8 +4,8 @@ const { LIKE_COIN_ABI, LIKE_COIN_ADDRESS } = require('../constant/contract/likec
 const { IS_TESTNET, STATUS } = require('../constant');
 const { timeout } = require('./misc');
 
-export const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
-export const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
+const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
+const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
 const web3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://mainnet.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6';
 const pollingWeb3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://eth.likecoin.store';
@@ -128,6 +128,8 @@ function getTransfersFromReceipt(receipt) {
 module.exports = {
   web3,
   STATUS,
+  CONFIRMATION_NEEDED,
+  BLOCK_TIME,
   getTransactionStatus,
   resendTransaction,
   getTransfersFromReceipt,

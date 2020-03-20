@@ -155,7 +155,7 @@ class PollTxMonitor {
 
   async startLoop() {
     const blockTime = this.data.type === 'cosmosTransfer' ? COSMOS_BLOCK_TIME : ETH_BLOCK_TIME;
-    const delayTime = Math.Max(TIME_BEFORE_FIRST_ENQUEUE, blockTime);
+    const delayTime = Math.max(TIME_BEFORE_FIRST_ENQUEUE, blockTime);
     const startDelay = (this.ts + delayTime) - Date.now();
     if (startDelay > 0) {
       await sleep(startDelay);
