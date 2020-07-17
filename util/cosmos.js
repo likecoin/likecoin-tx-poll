@@ -40,7 +40,15 @@ if (COSMOS_LCD_ENDPOINT && COSMOS_CHAIN_ID) updateCurrentHeight();
 
 async function getTransactionStatus(txHash) {
   try {
-    const { data: networkTx } = await api.get(`/txs/${txHash}`);
+    let networkTx;
+    try {
+      ({ data: networkTx } = await api.get(`/txs/${txHash}`));
+    } catch (err) {
+      if (err.response && err.response.status === 404) {
+        return { status: STATUS.NOT_FOUND };
+      }
+      throw err;
+    }
     if (!networkTx) {
       return { status: STATUS.NOT_FOUND };
     }
