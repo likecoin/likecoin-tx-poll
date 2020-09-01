@@ -5,10 +5,12 @@ const { IS_TESTNET, STATUS } = require('../constant');
 const { timeout } = require('./misc');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
+const MAIN_WEB3_PROVIDER = config.MAIN_WEB3_PROVIDER || (IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://cloudflare-eth.com');
+const POLLING_WEB3_PROVIDER = config.POLLING_WEB3_PROVIDER || (IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://eth.likecoin.store');
 const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
-const web3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://mainnet.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6';
-const pollingWeb3Provider = IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://eth.likecoin.store';
+const web3Provider = MAIN_WEB3_PROVIDER;
+const pollingWeb3Provider = POLLING_WEB3_PROVIDER;
 const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider, { timeout: 30000 }));
 const pollingWeb3 = new Web3(new Web3.providers.HttpProvider(
   pollingWeb3Provider,
