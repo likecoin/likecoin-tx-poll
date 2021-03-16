@@ -142,7 +142,7 @@ class PollTxMonitor {
       memo,
       accountNumber,
       sequence,
-      amount,
+      txAmount: amount,
     });
   }
 
