@@ -4,7 +4,6 @@ config.FIRESTORE_TX_ROOT = '';
 config.FIRESTORE_USER_ROOT = '';
 
 config.COSMOS_LCD_ENDPOINT = '';
-config.COSMOS_CHAIN_ID = 'likechain-cosmos-testnet-2';
 
 config.MAIN_WEB3_PROVIDER = '';
 config.POLLING_WEB3_PROVIDER = '';
