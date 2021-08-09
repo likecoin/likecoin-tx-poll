@@ -5,7 +5,6 @@ const config = require('../config/config.js');
 const { STATUS } = require('../constant');
 
 const {
-  COSMOS_CHAIN_ID,
   COSMOS_LCD_ENDPOINT,
   COSMOS_BLOCK_TIME = 5000,
 } = config;
@@ -19,24 +18,6 @@ const api = axios.create({
   httpsAgent: new https.Agent({ keepAlive: true }),
   timeout: 30000,
 });
-
-let currentHeightNumber;
-
-async function getCurrentHeight() {
-  const res = await api.get('/blocks/latest');
-  const { block_meta: { header: height } } = res.data;
-  return height;
-}
-
-async function updateCurrentHeight() {
-  try {
-    currentHeightNumber = await getCurrentHeight();
-  } catch (err) {
-    console.error(err);
-  }
-  setTimeout(() => updateCurrentHeight(), COSMOS_BLOCK_TIME);
-}
-if (COSMOS_LCD_ENDPOINT && COSMOS_CHAIN_ID) updateCurrentHeight();
 
 async function getTransactionStatus(txHash) {
   try {
@@ -54,9 +35,6 @@ async function getTransactionStatus(txHash) {
     }
     if (!networkTx.height) {
       return { status: STATUS.PENDING };
-    }
-    if (!currentHeightNumber) {
-      currentHeightNumber = await getCurrentHeight();
     }
     if (networkTx.code && networkTx.code !== '0') {
       console.error(`${networkTx.code}: ${networkTx.message}`); // eslint-disable-line no-console

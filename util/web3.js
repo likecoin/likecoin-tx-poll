@@ -6,37 +6,10 @@ const { timeout } = require('./misc');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
 const MAIN_WEB3_PROVIDER = config.MAIN_WEB3_PROVIDER || (IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://cloudflare-eth.com');
-const POLLING_WEB3_PROVIDER = config.POLLING_WEB3_PROVIDER || (IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://eth.likecoin.store');
 const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
 const web3Provider = MAIN_WEB3_PROVIDER;
-const pollingWeb3Provider = POLLING_WEB3_PROVIDER;
 const web3 = new Web3(new Web3.providers.HttpProvider(web3Provider, { timeout: 30000 }));
-const pollingWeb3 = new Web3(new Web3.providers.HttpProvider(
-  pollingWeb3Provider,
-  { timeout: 30000 },
-));
-
-let currentBlockNumber;
-const isPollingBlock = true;
-
-const blockPoller = async () => {
-  while (isPollingBlock) {
-    /* eslint-disable no-await-in-loop */
-    try {
-      currentBlockNumber = await pollingWeb3.eth.getBlockNumber();
-    } catch (err) {
-      const errMessage = (err.message || err).toString();
-      if (errMessage.includes('Rate limiting threshold exceeded')) {
-        await timeout(60000);
-      }
-      console.error(err); // eslint-disable-line no-console
-    }
-    await timeout(BLOCK_TIME);
-    /* eslint-enable no-await-in-loop */
-  }
-};
-blockPoller();
 
 async function getTransactionStatus(txHash, opt) {
   try {
@@ -48,9 +21,7 @@ async function getTransactionStatus(txHash, opt) {
     if (!networkTx.blockNumber) {
       return { status: STATUS.PENDING };
     }
-    if (!currentBlockNumber) {
-      currentBlockNumber = await web3.eth.getBlockNumber();
-    }
+    const currentBlockNumber = await web3.eth.getBlockNumber();
     if (currentBlockNumber - networkTx.blockNumber < CONFIRMATION_NEEDED) {
       return { status: STATUS.MINED };
     }
