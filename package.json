@@ -10,12 +10,12 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@google-cloud/pubsub": "^1.1.5",
+    "@google-cloud/pubsub": "^2.0.0",
     "axios": "^0.21.1",
     "bignumber.js": "^7.2.1",
     "bottleneck": "^2.19.5",
     "express": "^4.17.1",
-    "firebase-admin": "^8.8.0",
+    "firebase-admin": "^10.0.2",
     "uuid": "^3.2.1",
     "web3": "^1.0.0-beta.35"
   },
