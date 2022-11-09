@@ -5,6 +5,7 @@ config.FIRESTORE_USER_ROOT = '';
 
 config.COSMOS_LCD_ENDPOINT = '';
 config.COSMOS_RPC_ENDPOINT = '';
+config.COSMOS_DENOM = 'nanolike';
 
 config.MAIN_WEB3_PROVIDER = '';
 config.POLLING_WEB3_PROVIDER = '';

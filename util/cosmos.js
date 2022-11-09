@@ -7,6 +7,7 @@ const { STATUS } = require('../constant');
 const {
   COSMOS_LCD_ENDPOINT,
   COSMOS_RPC_ENDPOINT,
+  COSMOS_DENOM = 'nanolike',
   COSMOS_BLOCK_TIME = 5000,
 } = config;
 
@@ -74,7 +75,7 @@ async function getBlockTime(blockNumber) {
 }
 
 function amountToLIKE(likecoin) {
-  if (likecoin.denom === 'nanolike') {
+  if (likecoin.denom === COSMOS_DENOM) {
     return (Number.parseFloat(likecoin.amount) / 1e9);
   }
   console.error(`${likecoin.denom} is not supported denom`);
