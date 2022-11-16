@@ -5,7 +5,7 @@ const { IS_TESTNET, STATUS } = require('../constant');
 const { timeout } = require('./misc');
 
 const CONFIRMATION_NEEDED = config.CONFIRMATION_NEEDED || 5;
-const MAIN_WEB3_PROVIDER = config.MAIN_WEB3_PROVIDER || (IS_TESTNET ? 'https://rinkeby.infura.io/v3/3981482524b045a2a5d4f539c07c2cc6' : 'https://cloudflare-eth.com');
+const MAIN_WEB3_PROVIDER = config.MAIN_WEB3_PROVIDER || (IS_TESTNET ? 'https://goerli.infura.io/v3/02c1a8933b394ec0a0ae14dd0f5cf9c3' : 'https://cloudflare-eth.com');
 const BLOCK_TIME = 14.4 * 1000; // Target block time of Ethereum network is 14.4s per block
 
 const web3Provider = MAIN_WEB3_PROVIDER;
