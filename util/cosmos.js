@@ -32,7 +32,7 @@ async function getTransactionStatus(txHash) {
   try {
     let networkTx;
     try {
-      ({ data: networkTx } = await api.get(`/txs/${txHash}`));
+      ({ data: networkTx } = await api.get(`/cosmos/tx/v1beta1/txs/${txHash}`));
     } catch (err) {
       if (err.response && err.response.status === 404) {
         return { status: STATUS.NOT_FOUND };
@@ -42,10 +42,10 @@ async function getTransactionStatus(txHash) {
     if (!networkTx) {
       return { status: STATUS.NOT_FOUND };
     }
-    if (!networkTx.height) {
+    if (!networkTx.tx_response || !networkTx.tx_response.height) {
       return { status: STATUS.PENDING };
     }
-    if (networkTx.code && networkTx.code !== '0') {
+    if (networkTx.tx_response.code) {
       console.error(`${networkTx.code}: ${networkTx.message}`); // eslint-disable-line no-console
       return { status: STATUS.FAIL };
     }
