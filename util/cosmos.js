@@ -51,9 +51,9 @@ async function getTransactionStatus(txHash) {
     }
     const status = STATUS.SUCCESS;
     const receipt = {
-      blockNumber: parseInt(networkTx.height, 10),
-      blockHash: networkTx.txHash,
-      gasUsed: parseInt(networkTx.gas_used, 10),
+      blockNumber: parseInt(networkTx.tx_response.height, 10),
+      blockHash: networkTx.tx_response.txHash,
+      gasUsed: parseInt(networkTx.tx_response.gas_used, 10),
     };
     return { status, receipt, networkTx };
   } catch (err) {
@@ -69,7 +69,7 @@ async function resendTransaction(payload, txHash) {
 }
 
 async function getBlockTime(blockNumber) {
-  const { data } = await api.get(`/blocks/${blockNumber}`);
+  const { data } = await api.get(`/cosmos/base/tendermint/v1beta1/blocks/${blockNumber}`);
   const { block: { header: { time } } } = data;
   return (new Date(time)).getTime();
 }
