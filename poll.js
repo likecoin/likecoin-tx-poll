@@ -1,15 +1,7 @@
 /* eslint no-await-in-loop: off */
-const BigNumber = require('bignumber.js');
 
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config');
-const {
-  getBlockTime: getWeb3Block,
-  STATUS,
-  BLOCK_TIME: ETH_BLOCK_TIME,
-  getTransactionStatus: getWeb3TxStatus,
-  getTransfersFromReceipt: getWeb3TransferFromReceipt,
-} = require('./util/web3');
 const {
   getBlockTime: getCosmosBlock,
   BLOCK_TIME: COSMOS_BLOCK_TIME,
@@ -17,6 +9,7 @@ const {
 } = require('./util/cosmos');
 const { db } = require('./util/db');
 const { getTxAmountForLog } = require('./util/misc');
+const { STATUS } = require('./constant');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
@@ -67,28 +60,6 @@ class PollTxMonitor {
       statusUpdate.value = value;
     } else if (type.includes('cosmos')) {
       // TODO: handle cosmos transfer value if needed
-    } else if (receipt && (type === 'transfer' || type === 'transferDelegated')) {
-      // replace ETH LIKE transfer value
-      const transfers = getWeb3TransferFromReceipt(receipt);
-      if (!transfers || !transfers.length) {
-        statusUpdate.status = STATUS.FAIL;
-      } else {
-        let tx = transfers.find(
-          transfer => transfer.to.toLowerCase() !== networkTx.from.toLowerCase(),
-        );
-        if (!tx) {
-          const txs = transfers.filter(transfer => (new BigNumber(transfer.value)).gt(0));
-          if (txs.length) {
-            if (txs.length === 1) [tx] = txs;
-            else [tx] = txs.slice(-1); // assume last entry is tranfser
-          }
-        }
-        if (tx) {
-          statusUpdate.from = tx.from;
-          statusUpdate.to = tx.to;
-          statusUpdate.value = tx.value;
-        }
-      }
     }
 
     try {
@@ -97,8 +68,6 @@ class PollTxMonitor {
         statusUpdate.completeBlockNumber = blockNumber;
         if (type.includes('cosmos')) {
           blockTime = await getCosmosBlock(blockNumber);
-        } else {
-          blockTime = await getWeb3Block(blockNumber);
         }
         statusUpdate.completeTs = blockTime;
       }
@@ -110,8 +79,6 @@ class PollTxMonitor {
     const {
       likeAmount,
       likeAmountUnitStr,
-      ETHAmount,
-      ETHAmountUnitStr,
     } = getTxAmountForLog({
       value,
       amount,
@@ -134,8 +101,6 @@ class PollTxMonitor {
       toWallet: to,
       likeAmount,
       likeAmountUnitStr,
-      ETHAmount,
-      ETHAmountUnitStr,
       delegatorAddress,
       feeAmount,
       gas,
@@ -150,11 +115,17 @@ class PollTxMonitor {
     if (this.data.type.includes('cosmos')) {
       return getCosmosTxStatus(this.txHash);
     }
-    return getWeb3TxStatus(this.txHash, { requireReceipt: true });
+    return {};
   }
 
   async startLoop() {
-    const blockTime = this.data.type === 'cosmosTransfer' ? COSMOS_BLOCK_TIME : ETH_BLOCK_TIME;
+    // TODO: remove this check after implement evm tx
+    if (!this.data.type.includes('cosmos')) {
+      if (this.onFinish) this.onFinish(this);
+      return;
+    }
+
+    const blockTime = COSMOS_BLOCK_TIME;
     const delayTime = Math.max(TIME_BEFORE_FIRST_ENQUEUE, blockTime);
     const startDelay = (this.ts + delayTime) - Date.now();
     if (startDelay > 0) {

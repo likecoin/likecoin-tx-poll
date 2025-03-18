@@ -2,11 +2,7 @@
 
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config');
-const {
-  STATUS,
-  getTransactionStatus: getWeb3TxStatus,
-  resendTransaction: resendWeb3Tx,
-} = require('./util/web3');
+const { STATUS } = require('./constant');
 const {
   getTransactionStatus: getCosmosTxStatus,
   resendTransaction: resendCosmosTx,
@@ -47,8 +43,6 @@ class RetryTxMonitor {
     const {
       likeAmount,
       likeAmountUnitStr,
-      ETHAmount,
-      ETHAmountUnitStr,
     } = getTxAmountForLog(this.data);
     publisher.publish(PUBSUB_TOPIC_MISC, {
       logType,
@@ -61,8 +55,6 @@ class RetryTxMonitor {
       toWallet: to,
       likeAmount,
       likeAmountUnitStr,
-      ETHAmount,
-      ETHAmountUnitStr,
     });
   }
 
@@ -70,17 +62,22 @@ class RetryTxMonitor {
     if (this.data.type.includes('cosmos')) {
       return getCosmosTxStatus(this.txHash);
     }
-    return getWeb3TxStatus(this.txHash, { requireReceipt: true });
+    return {};
   }
 
   async resendTransaction() {
     if (this.data.type.includes('cosmos')) {
       return resendCosmosTx(this.data.rawSignedTx, this.txHash);
     }
-    return resendWeb3Tx(this.data.rawSignedTx, this.txHash);
+    return null;
   }
 
   async startLoop() {
+    // TODO: remove this check after implement evm tx
+    if (!this.data.type.includes('cosmos')) {
+      if (this.onFinish) this.onFinish(this);
+      return;
+    }
     try {
       const startDelay = (this.ts + TIME_BEFORE_FIRST_ENQUEUE) - Date.now();
       if (startDelay > 0) {
