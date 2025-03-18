@@ -5,7 +5,6 @@ const RetryTxMonitor = require('./retry.js');
 const PollTxMonitor = require('./poll.js');
 const config = require('./config/config.js');
 const { watchTx } = require('./util/db.js');
-const { web3 } = require('./util/web3.js');
 
 const FETCH_INTERVAL = config.FETCH_INTERVAL || 1000; // fallback: 1s
 
@@ -66,32 +65,8 @@ main();
 // health check
 const app = express();
 
-app.get('/healthz', async (req, res) => {
-  try {
-    const block = await web3.eth.getBlockNumber();
-    res.status(200).send(block.toString());
-  } catch (err) {
-    console.error(err);
-    res.sendStatus(500);
-  }
-});
-
-app.post('/suicide', async (req, res) => {
-  if (config.SUICIDE_AUTH_CODE) {
-    const { authorization } = req.headers;
-    if (!authorization) {
-      res.sendStatus(401);
-      return;
-    }
-    const [type, value] = authorization.split(' ');
-    if (type !== 'Bearer' || value !== config.SUICIDE_AUTH_CODE) {
-      res.sendStatus(401);
-      return;
-    }
-  }
+app.get('/healthz', (req, res) => {
   res.sendStatus(200);
-  console.log('Got suicide request, killing service.');
-  process.exit(config.SUICIDE_EXIT_CODE || 1);
 });
 
 const port = process.env.PORT || config.PORT || 3000;
