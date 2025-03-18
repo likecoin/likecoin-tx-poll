@@ -14,9 +14,9 @@
   "license": "ISC",
   "dependencies": {
     "@google-cloud/pubsub": "^1.1.5",
-    "axios": "^0.21.3",
+    "axios": "^1.8.3",
     "bottleneck": "^2.19.5",
-    "express": "^4.17.1",
+    "express": "^4.21.2",
     "firebase-admin": "^8.8.0",
     "uuid": "^3.2.1"
   },
