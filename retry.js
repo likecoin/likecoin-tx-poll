@@ -8,6 +8,11 @@ const {
   resendTransaction: resendCosmosTx,
 } = require('./util/cosmos');
 const { getTxAmountForLog, sleep } = require('./util/misc');
+const {
+  getTransactionStatus: getEvmTxStatus,
+  resendTransaction: resendEvmTransaction,
+  getEvmChainId,
+} = require('./util/evm');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
@@ -54,25 +59,44 @@ class RetryTxMonitor {
   }
 
   async getTransactionStatus() {
-    if (this.data.type.includes('cosmos')) {
-      return getCosmosTxStatus(this.txHash);
+    switch (this.chainType) {
+      case 'cosmos':
+        return getCosmosTxStatus(this.txHash);
+      case 'evm':
+        return getEvmTxStatus(this.txHash);
+      default:
     }
     return {};
   }
 
   async resendTransaction() {
-    if (this.data.type.includes('cosmos')) {
-      return resendCosmosTx(this.data.rawSignedTx, this.txHash);
+    switch (this.chainType) {
+      case 'cosmos':
+        return resendCosmosTx(this.data.rawSignedTx, this.txHash);
+      case 'evm':
+        return resendEvmTransaction(this.data.rawSignedTx);
+      default:
     }
     return null;
   }
 
+  getTxType() {
+    if (this.data.type.includes('cosmos')) {
+      return 'cosmos';
+    }
+    if (this.data.type.includes('evm') && this.data.chainId === getEvmChainId()) {
+      return 'evm';
+    }
+    return '';
+  }
+
   async startLoop() {
-    // TODO: remove this check after implement evm tx
-    if (!this.data.type.includes('cosmos')) {
+    this.chainType = this.getTxType();
+    if (!this.chainType) {
       if (this.onFinish) this.onFinish(this);
       return;
     }
+
     try {
       const startDelay = (this.ts + TIME_BEFORE_FIRST_ENQUEUE) - Date.now();
       if (startDelay > 0) {

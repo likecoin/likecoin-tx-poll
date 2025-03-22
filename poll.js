@@ -9,6 +9,12 @@ const {
 const { db } = require('./util/db');
 const { getTxAmountForLog, sleep } = require('./util/misc');
 const { STATUS } = require('./constant');
+const { getEvmChainId } = require('./util/evm');
+const {
+  getBlockTime: getEvmBlock,
+  BLOCK_TIME: EVM_BLOCK_TIME,
+  getTransactionStatus: getEvmTxStatus,
+} = require('./util/evm');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
@@ -22,9 +28,10 @@ class PollTxMonitor {
     this.ts = Number.parseInt(this.data.ts, 10) || Date.now();
     this.rateLimiter = rateLimiter;
     this.shouldStop = false;
+    this.chainType = '';
   }
 
-  async writeTxStatus(receipt, networkTx) {
+  async writeTxStatus(receipt) {
     const statusUpdate = { status: this.status };
     let blockNumber = 0;
     let blockTime = 0;
@@ -41,27 +48,24 @@ class PollTxMonitor {
       sequence,
       amount,
     } = this.data;
-    let {
+    const {
       value,
       from,
       to,
     } = this.data;
 
-    if (networkTx && type === 'transferETH') {
-      ({ from, to, value } = networkTx);
-      statusUpdate.from = from;
-      statusUpdate.to = to;
-      statusUpdate.value = value;
-    } else if (type.includes('cosmos')) {
-      // TODO: handle cosmos transfer value if needed
-    }
-
     try {
       if (receipt) {
         ({ blockNumber } = receipt);
         statusUpdate.completeBlockNumber = blockNumber;
-        if (type.includes('cosmos')) {
-          blockTime = await getCosmosBlock(blockNumber);
+        switch (this.chainType) {
+          case 'cosmos':
+            blockTime = await getCosmosBlock(blockNumber);
+            break;
+          case 'evm':
+            blockTime = await getEvmBlock(blockNumber);
+            break;
+          default:
         }
         statusUpdate.completeTs = blockTime;
       }
@@ -106,20 +110,44 @@ class PollTxMonitor {
   }
 
   async getTransactionStatus() {
-    if (this.data.type.includes('cosmos')) {
-      return getCosmosTxStatus(this.txHash);
+    switch (this.chainType) {
+      case 'cosmos':
+        return getCosmosTxStatus(this.txHash);
+      case 'evm':
+        return getEvmTxStatus(this.txHash);
+      default:
     }
     return {};
   }
 
+  getTxType() {
+    if (this.data.type.includes('cosmos')) {
+      return 'cosmos';
+    }
+    if (this.data.type.includes('evm') && this.data.chainId === getEvmChainId()) {
+      return 'evm';
+    }
+    return '';
+  }
+
   async startLoop() {
-    // TODO: remove this check after implement evm tx
-    if (!this.data.type.includes('cosmos')) {
+    this.chainType = this.getTxType();
+    if (!this.chainType) {
       if (this.onFinish) this.onFinish(this);
       return;
     }
 
-    const blockTime = COSMOS_BLOCK_TIME;
+    let blockTime = 1;
+    switch (this.chainType) {
+      case 'cosmos':
+        blockTime = COSMOS_BLOCK_TIME;
+        break;
+      case 'evm':
+        blockTime = EVM_BLOCK_TIME;
+        break;
+      default:
+    }
+
     const delayTime = Math.max(TIME_BEFORE_FIRST_ENQUEUE, blockTime);
     const startDelay = (this.ts + delayTime) - Date.now();
     if (startDelay > 0) {
