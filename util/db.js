@@ -1,6 +1,6 @@
 const admin = require('firebase-admin');
 const serviceAccount = require('../config/serviceAccountKey.json');
-const config = require('../config/config.js');
+const config = require('../config/config');
 
 const WATCH_QUERIES = config.WATCH_QUERIES || [
   [['status', '==', 'pending']],

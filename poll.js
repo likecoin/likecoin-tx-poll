@@ -1,5 +1,4 @@
 /* eslint no-await-in-loop: off */
-
 const publisher = require('./util/gcloudPub');
 const config = require('./config/config');
 const {
@@ -8,18 +7,13 @@ const {
   getTransactionStatus: getCosmosTxStatus,
 } = require('./util/cosmos');
 const { db } = require('./util/db');
-const { getTxAmountForLog } = require('./util/misc');
+const { getTxAmountForLog, sleep } = require('./util/misc');
 const { STATUS } = require('./constant');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
-
 const TIME_LIMIT = config.TIME_LIMIT || 60 * 60 * 1000 * 24; // fallback: 1 day
 const TIME_BEFORE_FIRST_ENQUEUE = config.TIME_BEFORE_FIRST_ENQUEUE || 0;
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 class PollTxMonitor {
   constructor(doc, rateLimiter) {

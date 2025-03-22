@@ -1,7 +1,7 @@
 const { PubSub } = require('@google-cloud/pubsub');
 const { v4: uuidv4 } = require('uuid');
 
-const config = require('../config/config.js'); // eslint-disable-line import/no-extraneous-dependencies
+const config = require('../config/config'); // eslint-disable-line import/no-extraneous-dependencies
 
 const pubsub = new PubSub();
 const topics = [

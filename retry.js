@@ -7,8 +7,7 @@ const {
   getTransactionStatus: getCosmosTxStatus,
   resendTransaction: resendCosmosTx,
 } = require('./util/cosmos');
-const { getTxAmountForLog } = require('./util/misc');
-
+const { getTxAmountForLog, sleep } = require('./util/misc');
 
 const PUBSUB_TOPIC_MISC = 'misc';
 
@@ -16,10 +15,6 @@ const TX_LOOP_INTERVAL = config.TX_LOOP_INTERVAL || 90 * 1000; // fallback: 90s
 const RETRY_NOT_FOUND_INTERVAL = config.RETRY_NOT_FOUND_INTERVAL || 30 * 1000; // fallback: 30s
 const NOT_FOUND_COUNT_BEFORE_RETRY = config.NOT_FOUND_COUNT_BEFORE_RETRY || 3;
 const TIME_BEFORE_FIRST_ENQUEUE = config.TIME_BEFORE_FIRST_ENQUEUE || 60 * 1000; // fallback: 60s
-
-function sleep(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
-}
 
 class RetryTxMonitor {
   constructor(doc, rateLimiter) {

@@ -26,11 +26,13 @@ function getTxAmountForLog(tx) {
   };
 }
 
-function timeout(ms) {
-  return new Promise(resolve => setTimeout(resolve, ms));
+function sleep(ms) {
+  return new Promise((resolve) => {
+    setTimeout(resolve, ms);
+  });
 }
 
 module.exports = {
   getTxAmountForLog,
-  timeout,
+  sleep,
 };

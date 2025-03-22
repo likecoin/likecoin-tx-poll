@@ -1,10 +1,10 @@
 const express = require('express');
 const Bottleneck = require('bottleneck');
 
-const RetryTxMonitor = require('./retry.js');
-const PollTxMonitor = require('./poll.js');
-const config = require('./config/config.js');
-const { watchTx } = require('./util/db.js');
+const RetryTxMonitor = require('./retry');
+const PollTxMonitor = require('./poll');
+const config = require('./config/config');
+const { watchTx } = require('./util/db');
 
 const FETCH_INTERVAL = config.FETCH_INTERVAL || 1000; // fallback: 1s
 
@@ -26,7 +26,7 @@ async function main() {
     minTime: FETCH_INTERVAL,
   });
   // eslint-disable-next-line no-console
-  rateLimiter.on('error', err => console.error('Error in rateLimiter:', err));
+  rateLimiter.on('error', (err) => console.error('Error in rateLimiter:', err));
 
   const existingMonitors = {};
 

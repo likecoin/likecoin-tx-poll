@@ -1,7 +1,7 @@
 const axios = require('axios');
 const http = require('http');
 const https = require('https');
-const config = require('../config/config.js');
+const config = require('../config/config');
 const { STATUS } = require('../constant');
 
 const {
