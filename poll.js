@@ -116,6 +116,7 @@ class PollTxMonitor {
       case 'evm':
         return getEvmTxStatus(this.txHash);
       default:
+        console.error(`Unsupported or unexpected chain type: ${this.chainType}`);
     }
     return {};
   }

@@ -65,6 +65,7 @@ class RetryTxMonitor {
       case 'evm':
         return getEvmTxStatus(this.txHash);
       default:
+        console.error(`Unrecognized chain type: ${this.chainType}`);
     }
     return {};
   }
@@ -76,6 +77,7 @@ class RetryTxMonitor {
       case 'evm':
         return resendEvmTransaction(this.data.rawSignedTx);
       default:
+        console.error(`Unsupported chain type: ${this.chainType}`);
     }
     return null;
   }
